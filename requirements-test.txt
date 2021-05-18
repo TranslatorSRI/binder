@@ -3,3 +3,5 @@ pytest
 pytest-asyncio
 pytest-cov
 requests
+httpx==0.16.0
+asgiar @ git+git://github.com/patrickkwang/asgiar@ee956c00b42d5584e0d82a0f0b4de2373c1a1472
