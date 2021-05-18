@@ -8,8 +8,8 @@ RUN useradd -m -u $UID -g $GID -s /bin/bash murphy
 
 # set up requirements
 WORKDIR /home/murphy
-ADD --chown=murphy:murphy ./requirements.txt /home/murphy/requirements.txt
-RUN pip install -r /home/murphy/requirements.txt
+ADD --chown=murphy:murphy ./requirements-lock.txt /home/murphy/requirements-lock.txt
+RUN pip install -r /home/murphy/requirements-lock.txt
 
 # get package
 ADD --chown=murphy:murphy . .

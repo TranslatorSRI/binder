@@ -1,0 +1,23 @@
+asgiar @ git+git://github.com/patrickkwang/asgiar@ee956c00b42d5584e0d82a0f0b4de2373c1a1472
+attrs==21.2.0
+certifi==2020.12.5
+chardet==4.0.0
+codecov==2.1.11
+coverage==5.5
+h11==0.12.0
+httpcore==0.12.3
+httpx==0.16.0
+idna==2.10
+iniconfig==1.1.1
+packaging==20.9
+pluggy==0.13.1
+py==1.10.0
+pyparsing==2.4.7
+pytest==6.2.4
+pytest-asyncio==0.15.1
+pytest-cov==2.12.0
+requests==2.25.1
+rfc3986==1.5.0
+sniffio==1.2.0
+toml==0.10.2
+urllib3==1.26.4
