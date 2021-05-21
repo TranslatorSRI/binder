@@ -3,7 +3,7 @@ click==7.1.2
 fastapi==0.62.0
 h11==0.12.0
 pydantic==1.8.2
-reasoner-pydantic @ git+https://github.com/ranking-agent/reasoner-pydantic@dee9f5f8fc77508f9c3a828dfdd6765e06a36078
+reasoner-pydantic @ git+https://github.com/ranking-agent/reasoner-pydantic@50ecbc9b5c129abbbc876a4113503bf51a1f3fb5
 small-kg @ git+git://github.com/patrickkwang/small-kg@9cfa7ca88e4e74163ebd76b22d26ec3a90a14c1d
 starlette==0.13.6
 typing-extensions==3.10.0.0
