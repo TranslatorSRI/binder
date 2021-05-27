@@ -46,16 +46,20 @@ async def get_data_from_string(data: str):
             eid = str(uuid.uuid4())
 
             predicate = match.group("predicate")
+            source = match.group("source")
+            target = match.group("target")
             if match.group("o2s"):
-                predicate = f"<-{predicate}-"
+                subject = target
+                object = source
             else:
-                predicate = f"-{predicate}->"
+                subject = source
+                object = target
 
             edges[eid] = {
                 "id": eid,
-                "source": match.group("source"),
+                "subject": subject,
                 "predicate": predicate,
-                "target": match.group("target"),
+                "object": object,
             }
             continue
 
