@@ -32,7 +32,7 @@ def kp_router(
             kp: KnowledgeProvider = Depends(get_kp(database_file))
     ) -> Response:
         """Get results for query graph."""
-        query = query.dict()
+        query = query.dict(exclude_unset=True)
         qgraph = query["message"]["query_graph"]
 
         kgraph, results = await kp.get_results(qgraph)
