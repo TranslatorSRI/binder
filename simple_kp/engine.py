@@ -179,8 +179,7 @@ class KnowledgeProvider():
 
         # look up associated knode(s)
         curies = to_list(source_qnode["id"])
-        for curie in curies:
-            source_knode_id, source_knode = await self.get_knode(curie)
+        for source_knode_id in curies:
             LOGGER.debug(
                 "Expanding from node %s/%s...",
                 source_qnode_id,
