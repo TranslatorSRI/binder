@@ -42,10 +42,6 @@ def to_kedge(row):
     return kedge
 
 
-list_fields = ['category']
-match_list = re.compile(r"\|(.*?)\|")
-
-
 def custom_row_factory(cursor, row):
     """
     Convert row to dictionary and
@@ -55,11 +51,6 @@ def custom_row_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         row_output[col[0]] = row[idx]
 
-    for field in list_fields:
-        if field not in row_output:
-            continue
-        values = match_list.finditer(row_output[field])
-        row_output[field] = [v.group(1) for v in values]
     return row_output
 
 
@@ -125,9 +116,9 @@ class KnowledgeProvider():
             target_node = nodes[edge["target"]]
 
             operation_iterator = itertools.product(
-                source_node["category"],
+                [subject_node["category"]],
                 [edge["predicate"]],
-                target_node["category"],
+                [object_node["category"]],
             )
 
             ops.update(operation_iterator)
@@ -150,8 +141,7 @@ class KnowledgeProvider():
 
         prefixes = defaultdict(set)
         for node in nodes:
-            for category in node["category"]:
-                prefixes[category].add(node["id"].split(":")[0])
+            prefixes[node["category"]].add(node["id"].split(":")[0])
         return {
             category: list(prefix_set)
             for category, prefix_set in prefixes.items()
