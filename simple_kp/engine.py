@@ -266,7 +266,11 @@ class KnowledgeProvider():
             row = await cursor.fetchone()
         if row is None:
             raise NoAnswersException()
-        return row["id"], {k: v for k, v in dict(row).items() if k != "id"}
+        return row["id"], {
+            k: (v if k != "category" else [v])
+            for k, v in dict(row).items()
+            if k != "id"
+        }
 
     async def get_results(self, qgraph: Dict[str, Any]):
         """Get results and kgraph."""
