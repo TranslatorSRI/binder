@@ -34,15 +34,11 @@ async def get_data_from_string(data: str):
         match = re.fullmatch(node_pattern, line)
         if match is not None:
             nid = match.group("id")
-            if nid not in nodes:
-                nodes[nid] = {
-                    "id": nid,
-                    "category": [],
-                }
+            nodes[nid] = {
+                "id": nid,
+                "category": match.group("category"),
+            }
 
-            nodes[nid]["category"].append(
-                match.group("category")
-            )
             continue
 
         match = re.fullmatch(edge_pattern, line)
@@ -76,11 +72,6 @@ async def add_data(
     nodes, edges = await get_data_from_string(data)
 
     if nodes:
-        # Convert category list to our custom string format
-        for node in nodes:
-            if "category" in node:
-                node["category"] = "".join(f"|{c}|" for c in node["category"])
-
         await connection.execute("CREATE TABLE IF NOT EXISTS nodes ({0})".format(
             ", ".join([f"{val} text" for val in nodes[0]])
         ))
