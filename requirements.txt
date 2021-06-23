@@ -1,4 +1,4 @@
 aiosqlite==0.16.0
 fastapi==0.62.0
-reasoner-pydantic==1.1.1
+reasoner-pydantic @ git+git://github.com/TranslatorSRI/reasoner-pydantic@v1.1.2
 uvicorn==0.12.3
