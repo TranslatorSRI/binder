@@ -23,18 +23,18 @@ async def test_overlay():
             "query_graph": {
                 "nodes": {
                     "n0": {
-                        "category": "biolink:ChemicalSubstance",
+                        "categories": ["biolink:ChemicalSubstance"],
                     },
                     "n1": {
-                        "category": "biolink:Disease",
-                        "id": "MONDO:0005148",
+                        "categories": ["biolink:Disease"],
+                        "ids": ["MONDO:0005148"],
                     },
                 },
                 "edges": {
                     "e01": {
                         "subject": "n0",
                         "object": "n1",
-                        "predicate": "biolink:treats",
+                        "predicates": ["biolink:treats"],
                     },
                 },
             }

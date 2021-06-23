@@ -36,18 +36,18 @@ async def test_reverse(connection: aiosqlite.Connection):
         "query_graph": {
             "nodes": {
                 "n0": {
-                    "category": "biolink:Disease",
-                    "id": "MONDO:0005148",
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
                 },
                 "n1": {
-                    "category": "biolink:ChemicalSubstance",
+                    "categories": ["biolink:ChemicalSubstance"],
                 },
             },
             "edges": {
                 "e01": {
                     "subject": "n1",
                     "object": "n0",
-                    "predicate": "biolink:treats",
+                    "predicates": ["biolink:treats"],
                 },
             },
         }
@@ -72,18 +72,18 @@ async def test_list_properties(connection: aiosqlite.Connection):
         "query_graph": {
             "nodes": {
                 "n0": {
-                    "category": ["biolink:ChemicalSubstance"],
-                    "id": ["CHEBI:136043"],
+                    "categories": ["biolink:ChemicalSubstance"],
+                    "ids": ["CHEBI:136043"],
                 },
                 "n1": {
-                    "category": ["biolink:Disease"],
+                    "categories": ["biolink:Disease"],
                 },
             },
             "edges": {
                 "e01": {
                     "subject": "n0",
                     "object": "n1",
-                    "predicate": ["biolink:treats"],
+                    "predicates": ["biolink:treats"],
                 },
             },
         }
@@ -108,19 +108,19 @@ async def test_isittrue(connection: aiosqlite.Connection):
         "query_graph": {
             "nodes": {
                 "n0": {
-                    "category": "biolink:Disease",
-                    "id": "MONDO:0005148",
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
                 },
                 "n1": {
-                    "category": "biolink:ChemicalSubstance",
-                    "id": "CHEBI:6801",
+                    "categories": ["biolink:ChemicalSubstance"],
+                    "ids": ["CHEBI:6801"],
                 },
             },
             "edges": {
                 "e01": {
                     "subject": "n1",
                     "object": "n0",
-                    "predicate": "biolink:treats",
+                    "predicates": ["biolink:treats"],
                 },
             },
         }
@@ -145,18 +145,18 @@ async def test_fail(connection: aiosqlite.Connection):
         "query_graph": {
             "nodes": {
                 "n0": {
-                    "category": "biolink:Disease",
-                    "id": "MONDO:0005148",
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
                 },
                 "n1": {
-                    "category": "biolink:ChemicalSubstance",
+                    "categories": ["biolink:ChemicalSubstance"],
                 },
             },
             "edges": {
                 "e01": {
                     "subject": "n1",
                     "object": "n0",
-                    "predicate": "biolink:causes",
+                    "predicates": ["biolink:causes"],
                 },
             },
         }

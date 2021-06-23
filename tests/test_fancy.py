@@ -37,31 +37,31 @@ async def test_loop(connection: aiosqlite.Connection):
         "query_graph": {
             "nodes": {
                 "n0": {
-                    "category": "biolink:Disease",
-                    "id": "MONDO:0005148",
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
                 },
                 "n1": {
-                    "category": "biolink:ChemicalSubstance",
+                    "categories": ["biolink:ChemicalSubstance"],
                 },
                 "n2": {
-                    "category": "biolink:Gene",
+                    "categories": ["biolink:Gene"],
                 },
             },
             "edges": {
                 "e10": {
                     "subject": "n1",
                     "object": "n0",
-                    "predicate": "biolink:treats",
+                    "predicates": ["biolink:treats"],
                 },
                 "e21": {
                     "subject": "n2",
                     "object": "n1",
-                    "predicate": "biolink:affected_by",
+                    "predicates": ["biolink:affected_by"],
                 },
                 "e02": {
                     "subject": "n0",
                     "object": "n2",
-                    "predicate": "biolink:affected_by",
+                    "predicates": ["biolink:affected_by"],
                 },
             },
         }
@@ -90,34 +90,34 @@ async def test_branch(connection: aiosqlite.Connection):
         "query_graph": {
             "nodes": {
                 "disease": {
-                    "category": "biolink:Disease",
-                    "id": "MONDO:0005148",
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
                 },
                 "gene": {
-                    "category": "biolink:Gene",
+                    "categories": ["biolink:Gene"],
                 },
                 "drug": {
-                    "category": "biolink:ChemicalSubstance",
+                    "categories": ["biolink:ChemicalSubstance"],
                 },
                 "cell": {
-                    "category": "biolink:Cell",
+                    "categories": ["biolink:Cell"],
                 },
             },
             "edges": {
                 "e10": {
                     "subject": "drug",
                     "object": "gene",
-                    "predicate": "biolink:affects",
+                    "predicates": ["biolink:affects"],
                 },
                 "e21": {
                     "subject": "disease",
                     "object": "gene",
-                    "predicate": "biolink:affected_by",
+                    "predicates": ["biolink:affected_by"],
                 },
                 "e02": {
                     "subject": "gene",
                     "object": "cell",
-                    "predicate": "biolink:affected_by",
+                    "predicates": ["biolink:affected_by"],
                 },
             },
         }
