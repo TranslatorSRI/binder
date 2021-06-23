@@ -20,7 +20,7 @@ async def connection():
 
 @pytest.mark.asyncio
 async def test_unrecognized_key(connection: aiosqlite.Connection):
-    """Test simple KP."""
+    """Test unrecognized key."""
     await add_data(
         connection,
         data="""
@@ -53,3 +53,40 @@ async def test_unrecognized_key(connection: aiosqlite.Connection):
     }
     kgraph, results = await kp.get_results(message["query_graph"])
     assert not results
+
+
+@pytest.mark.asyncio
+async def test_ignored_key(connection: aiosqlite.Connection):
+    """Test ignored key."""
+    await add_data(
+        connection,
+        data="""
+            MONDO:0005148(( category biolink:Disease ))
+            MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
+            CHEBI:6801(( category biolink:ChemicalSubstance ))
+        """,
+    )
+    kp = KnowledgeProvider(connection)
+    message = {
+        "query_graph": {
+            "nodes": {
+                "n0": {
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
+                    "is_set": False,
+                },
+                "n1": {
+                    "categories": ["biolink:ChemicalSubstance"],
+                },
+            },
+            "edges": {
+                "e01": {
+                    "subject": "n1",
+                    "object": "n0",
+                    "predicates": ["biolink:treats"],
+                },
+            },
+        }
+    }
+    kgraph, results = await kp.get_results(message["query_graph"])
+    assert results
