@@ -148,19 +148,27 @@ class KnowledgeProvider():
             else:
                 conditions.append(f"{key} = ?")
         conditions = " AND ".join(conditions)
-        async with self.db.execute(
-                (
-                    "SELECT edge.id AS id, subject.id AS subject, edge.predicate as predicate, object.id as object "
-                    "FROM edges AS edge "
-                    "JOIN nodes AS subject ON edge.subject = subject.id "
-                    "JOIN nodes AS object ON edge.object = object.id "
-                 ) + "WHERE " + conditions,
-                list(
-                    x for value in kwargs.values()
-                    for x in to_list(value)
-                ),
-        ) as cursor:
-            rows = await cursor.fetchall()
+        try:
+            async with self.db.execute(
+                    (
+                        "SELECT edge.id AS id, subject.id AS subject, edge.predicate as predicate, object.id as object "
+                        "FROM edges AS edge "
+                        "JOIN nodes AS subject ON edge.subject = subject.id "
+                        "JOIN nodes AS object ON edge.object = object.id "
+                    ) + "WHERE " + conditions,
+                    list(
+                        x
+                        for value in kwargs.values()
+                        for x in to_list(value)
+                    ),
+            ) as cursor:
+                rows = await cursor.fetchall()
+        except sqlite3.OperationalError as err:
+            match = re.fullmatch(r"no such column: (?:edge|subject|object)\.(.*)", str(err))
+            if match is not None:
+                LOGGER.warning("Unrecognized key '%s'", match.group(1))
+                return {}
+            raise
 
         return {
             row["id"]: {key: value for key, value in row.items() if key != "id"}
@@ -209,12 +217,12 @@ class KnowledgeProvider():
             for key, value in qedge.items():
                 if key in ("subject", "object"):
                     continue
-                kwargs[f"edge.{KEY_MAP[key]}"] = value
+                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
             for role in ("subject", "object"):
                 for key, value in qgraph_["nodes"][qedge[role]].items():
                     if key in ():
                         continue
-                    kwargs[f"{role}.{KEY_MAP[key]}"] = value
+                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
 
             kedges = await self.get_kedges(**kwargs)
 
