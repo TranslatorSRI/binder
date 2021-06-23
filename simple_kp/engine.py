@@ -19,10 +19,10 @@ LOGGER = logging.getLogger(__name__)
 def normalize_qgraph(qgraph):
     """Normalize query graph."""
     for node in qgraph["nodes"].values():
-        node["category"] = node.get("category", "biolink:NamedThing")
+        node["categories"] = node.get("categories", ["biolink:NamedThing"])
     for edge in qgraph["edges"].values():
-        edge["predicate"] = to_list(
-            edge.get("predicate", "biolink:related_to"))
+        edge["predicates"] = to_list(
+            edge.get("predicates", ["biolink:related_to"]))
 
 
 def custom_row_factory(cursor, row):
@@ -35,6 +35,13 @@ def custom_row_factory(cursor, row):
         row_output[col[0]] = row[idx]
 
     return row_output
+
+
+KEY_MAP = {
+    "predicates": "predicate",
+    "categories": "category",
+    "ids": "id",
+}
 
 
 class KnowledgeProvider():
@@ -171,14 +178,17 @@ class KnowledgeProvider():
             return {"nodes": dict(), "edges": dict()}, [{"node_bindings": dict(), "edge_bindings": dict()}]
         kgraph = {"nodes": dict(), "edges": dict()}
         results = []
-        source_qnode_id, source_qnode = next(
-            (key, qnode)
-            for key, qnode in qgraph["nodes"].items()
-            if qnode.get("id", None) is not None
-        )
+        try:
+            source_qnode_id, source_qnode = next(
+                (key, qnode)
+                for key, qnode in qgraph["nodes"].items()
+                if qnode.get("ids", None) is not None
+            )
+        except StopIteration:
+            raise RuntimeError("Cannot find qnode with ids in %s", str(qgraph["nodes"]))
 
         # look up associated knode(s)
-        curies = to_list(source_qnode["id"])
+        curies = to_list(source_qnode["ids"])
         for source_knode_id in curies:
             LOGGER.debug(
                 "Expanding from node %s/%s...",
@@ -199,12 +209,12 @@ class KnowledgeProvider():
             for key, value in qedge.items():
                 if key in ("subject", "object"):
                     continue
-                kwargs[f"edge.{key}"] = value
+                kwargs[f"edge.{KEY_MAP[key]}"] = value
             for role in ("subject", "object"):
                 for key, value in qgraph_["nodes"][qedge[role]].items():
                     if key in ():
                         continue
-                    kwargs[f"{role}.{key}"] = value
+                    kwargs[f"{role}.{KEY_MAP[key]}"] = value
 
             kedges = await self.get_kedges(**kwargs)
 
@@ -218,8 +228,8 @@ class KnowledgeProvider():
 
                 qgraph__ = copy.deepcopy(qgraph_)
                 # pin node
-                qgraph__["nodes"][qedge["subject"]]["id"] = [kedge["subject"]]
-                qgraph__["nodes"][qedge["object"]]["id"] = [kedge["object"]]
+                qgraph__["nodes"][qedge["subject"]]["ids"] = [kedge["subject"]]
+                qgraph__["nodes"][qedge["object"]]["ids"] = [kedge["object"]]
                 # remove orphaned nodes
                 qgraph__.remove_orphaned()
                 
@@ -267,9 +277,11 @@ class KnowledgeProvider():
         if row is None:
             raise NoAnswersException()
         return row["id"], {
-            k: (v if k != "category" else [v])
+            k: v
             for k, v in dict(row).items()
-            if k != "id"
+            if k not in ("id", "category")
+        } | {
+            "categories": [row["category"]]
         }
 
     async def get_results(self, qgraph: Dict[str, Any]):
