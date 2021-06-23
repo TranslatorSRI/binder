@@ -20,6 +20,7 @@ def normalize_qgraph(qgraph):
     """Normalize query graph."""
     for node in qgraph["nodes"].values():
         node["categories"] = node.get("categories", ["biolink:NamedThing"])
+        node.pop("is_set", None)
     for edge in qgraph["edges"].values():
         edge["predicates"] = to_list(
             edge.get("predicates", ["biolink:related_to"]))
