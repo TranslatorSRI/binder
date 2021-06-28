@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 app = FastAPI(
     title="Test KP",
     description="Simple dummy KP for testing",
-    version="1.2.0",
+    version="2.0.0",
 )
 
 database_files = glob.glob("./*.db")
