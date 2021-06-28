@@ -123,9 +123,9 @@ class KnowledgeProvider():
 
         return [
             {
-                "subject": op[0],
+                "subject_category": op[0],
                 "predicate": op[1],
-                "object": op[2],
+                "object_category": op[2],
             }
             for op in ops
         ]
