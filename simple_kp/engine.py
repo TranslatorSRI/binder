@@ -50,7 +50,7 @@ class KnowledgeProvider():
 
     def __init__(
             self,
-            arg: Union[str, aiosqlite.Connection],
+            arg: Union[str, aiosqlite.Connection] = ":memory:",
     ):
         """Initialize."""
         if isinstance(arg, str):
