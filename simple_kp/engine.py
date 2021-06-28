@@ -295,6 +295,7 @@ class KnowledgeProvider():
 
     async def get_results(self, qgraph: Dict[str, Any]):
         """Get results and kgraph."""
+        qgraph = copy.deepcopy(qgraph)
         qgraph = Graph(qgraph)
         normalize_qgraph(qgraph)
         kgraph, results = await self.lookup(qgraph)
