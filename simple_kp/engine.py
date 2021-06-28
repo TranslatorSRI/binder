@@ -11,7 +11,7 @@ from typing import Any, Dict, Tuple, Union
 import aiosqlite
 
 from .graph import Graph
-from .util import to_list, NoAnswersException
+from .util import get_subpredicates, to_list, NoAnswersException, get_subcategories
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,11 +19,18 @@ LOGGER = logging.getLogger(__name__)
 def normalize_qgraph(qgraph):
     """Normalize query graph."""
     for node in qgraph["nodes"].values():
-        node["categories"] = node.get("categories", ["biolink:NamedThing"])
+        node["categories"] = [
+            descendant
+            for category in node.get("categories", None) or ["biolink:NamedThing"]
+            for descendant in get_subcategories(category)
+        ]
         node.pop("is_set", None)
     for edge in qgraph["edges"].values():
-        edge["predicates"] = to_list(
-            edge.get("predicates", ["biolink:related_to"]))
+        edge["predicates"] = [
+            descendant
+            for predicate in edge.get("predicates", None) or ["biolink:related_to"]
+            for descendant in get_subpredicates(predicate)
+        ]
 
 
 def custom_row_factory(cursor, row):
