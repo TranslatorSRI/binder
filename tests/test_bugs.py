@@ -19,6 +19,82 @@ async def connection():
 
 
 @pytest.mark.asyncio
+async def test_unknown_predicate(connection: aiosqlite.Connection):
+    """Test unknown predicate."""
+    await add_data(
+        connection,
+        data="""
+            CHEBI:6801(( category biolink:ChemicalSubstance ))
+            MONDO:0005148(( category biolink:Disease ))
+            HP:0004324(( category biolink:PhenotypicFeature ))
+            CHEBI:6801-- predicate biolink:unknown -->MONDO:0005148
+            MONDO:0005148-- predicate biolink:has_phenotype -->HP:0004324
+        """,
+    )
+    kp = KnowledgeProvider(connection)
+    message = {
+        "query_graph": {
+            "nodes": {
+                "n0": {
+                    "categories": ["biolink:NamedThing"],
+                    "ids": ["CHEBI:6801"],
+                },
+                "n1": {
+                    "categories": ["biolink:Disease"],
+                },
+            },
+            "edges": {
+                "e01": {
+                    "subject": "n0",
+                    "object": "n1",
+                    "predicates": ["biolink:unknown"],
+                },
+            },
+        }
+    }
+    kgraph, results = await kp.get_results(message["query_graph"])
+    assert results
+
+
+@pytest.mark.asyncio
+async def test_subclass(connection: aiosqlite.Connection):
+    """Test unrecognized key."""
+    await add_data(
+        connection,
+        data="""
+            CHEBI:6801(( category biolink:ChemicalSubstance ))
+            MONDO:0005148(( category biolink:Disease ))
+            HP:0004324(( category biolink:PhenotypicFeature ))
+            CHEBI:6801-- predicate biolink:treats -->MONDO:0005148
+            MONDO:0005148-- predicate biolink:has_phenotype -->HP:0004324
+        """,
+    )
+    kp = KnowledgeProvider(connection)
+    message = {
+        "query_graph": {
+            "nodes": {
+                "n0": {
+                    "categories": ["biolink:NamedThing"],
+                    "ids": ["CHEBI:6801"],
+                },
+                "n1": {
+                    "categories": ["biolink:Disease"],
+                },
+            },
+            "edges": {
+                "e01": {
+                    "subject": "n0",
+                    "object": "n1",
+                    "predicates": ["biolink:treats"],
+                },
+            },
+        }
+    }
+    kgraph, results = await kp.get_results(message["query_graph"])
+    assert results
+
+
+@pytest.mark.asyncio
 async def test_unrecognized_key(connection: aiosqlite.Connection):
     """Test unrecognized key."""
     await add_data(
