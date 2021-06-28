@@ -62,4 +62,25 @@ def kp_router(
             "curie_prefixes": await kp.get_curie_prefixes(),
         }
 
+    @router.get("/meta_knowledge_graph")
+    async def get_metakg(
+            kp: KnowledgeProvider = Depends(get_kp(database_file)),
+    ):
+        """Get meta knowledge graph."""
+        meta_kg = {
+            "edges": [
+                {
+                    "subject": op["subject_category"],
+                    "predicate": op["predicate"],
+                    "object": op["object_category"],
+                }
+                for op in await kp.get_operations()
+            ],
+            "nodes": {
+                category: {"id_prefixes": data}
+                for category, data in (await kp.get_curie_prefixes()).items()
+            },
+        }
+        return meta_kg
+
     return router
