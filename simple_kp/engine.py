@@ -74,7 +74,7 @@ class KnowledgeProvider():
         if self.db is not None:
             return self
         self.db = await aiosqlite.connect(self.database_file)
-        self.db.row_factory = sqlite3.Row
+        self.db.row_factory = custom_row_factory
         return self
 
     async def __aexit__(self, *args):
