@@ -9,7 +9,7 @@ chardet==4.0.0
 click==7.1.2
 Deprecated==1.2.12
 deprecation==2.1.0
-fastapi==0.62.0
+fastapi==0.65.2
 frozendict==2.0.3
 graphviz==0.16
 greenlet==1.1.0
