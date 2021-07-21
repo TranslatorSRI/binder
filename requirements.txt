@@ -1,6 +1,5 @@
 aiosqlite==0.16.0
-bmt==0.6.0
-linkml-model==1.0.0
+bmt-lite-1.8.2==1.0.2
 fastapi==0.65.2
 reasoner-pydantic==1.1.2.1
 uvicorn==0.12.3
