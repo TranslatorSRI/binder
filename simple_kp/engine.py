@@ -203,83 +203,74 @@ class KnowledgeProvider():
         except StopIteration:
             raise RuntimeError("Cannot find qnode with ids in %s", str(qgraph["nodes"]))
 
-        # look up associated knode(s)
-        curies = to_list(source_qnode["ids"])
-        for source_knode_id in curies:
-            LOGGER.debug(
-                "Expanding from node %s/%s...",
-                source_qnode_id,
-                source_knode_id,
-            )
+        qgraph_ = copy.deepcopy(qgraph)
+        qedge_id, qedge = next(
+            (qedge_id, qedge)
+            for qedge_id, qedge in list(qgraph["edges"].items())
+            if source_qnode_id in (qedge["subject"], qedge["object"])
+            and qgraph_["edges"].pop(qedge_id) is not None
+        )
 
-            qgraph_ = copy.deepcopy(qgraph)
-            qedge_id, qedge = next(
-                (qedge_id, qedge)
-                for qedge_id, qedge in list(qgraph["edges"].items())
-                if source_qnode_id in (qedge["subject"], qedge["object"])
-                and qgraph_["edges"].pop(qedge_id) is not None
-            )
-
-            # get kedges for qedge
-            kwargs = dict()
-            for key, value in qedge.items():
-                if key in ("subject", "object"):
+        # get kedges for qedge
+        kwargs = dict()
+        for key, value in qedge.items():
+            if key in ("subject", "object"):
+                continue
+            kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
+        for role in ("subject", "object"):
+            for key, value in qgraph_["nodes"][qedge[role]].items():
+                if key in ():
                     continue
-                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
-            for role in ("subject", "object"):
-                for key, value in qgraph_["nodes"][qedge[role]].items():
-                    if key in ():
-                        continue
-                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
+                kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
 
-            kedges = await self.get_kedges(**kwargs)
+        kedges = await self.get_kedges(**kwargs)
 
-            for kedge_id, kedge in kedges.items():
-                LOGGER.debug(
-                    "Expanding along edge %s/%s...",
-                    qedge_id,
-                    kedge_id,
-                )
-                # now solve the smaller question
+        for kedge_id, kedge in kedges.items():
+            LOGGER.debug(
+                "Expanding along edge %s/%s...",
+                qedge_id,
+                kedge_id,
+            )
+            # now solve the smaller question
 
-                qgraph__ = copy.deepcopy(qgraph_)
-                # pin node
-                qgraph__["nodes"][qedge["subject"]]["ids"] = [kedge["subject"]]
-                qgraph__["nodes"][qedge["object"]]["ids"] = [kedge["object"]]
-                # remove orphaned nodes
-                qgraph__.remove_orphaned()
-                
-                kgraph_, results_ = await self.lookup(qgraph__)
+            qgraph__ = copy.deepcopy(qgraph_)
+            # pin node
+            qgraph__["nodes"][qedge["subject"]]["ids"] = [kedge["subject"]]
+            qgraph__["nodes"][qedge["object"]]["ids"] = [kedge["object"]]
+            # remove orphaned nodes
+            qgraph__.remove_orphaned()
+            
+            kgraph_, results_ = await self.lookup(qgraph__)
 
-                # add edge to results and kgraph
-                kgraph["edges"][kedge_id] = kedge
-                subject_knode_id, subject_knode = await self.get_knode(kedge["subject"])
-                object_knode_id, object_knode = await self.get_knode(kedge["object"])
-                kgraph["nodes"][subject_knode_id] = subject_knode
-                kgraph["nodes"][object_knode_id] = object_knode
-                results_ = [
-                    {
-                        "node_bindings": {
-                            **result["node_bindings"],
-                            qedge["subject"]: [{
-                                "id": kedge["subject"],
-                            }],
-                            qedge["object"]: [{
-                                "id": kedge["object"],
-                            }],
-                        },
-                        "edge_bindings": {
-                            **result["edge_bindings"],
-                            qedge_id: [{
-                                "id": kedge_id,
-                            }],
-                        },
-                    }
-                    for result in results_
-                ]
-                kgraph["nodes"].update(kgraph_["nodes"])
-                kgraph["edges"].update(kgraph_["edges"])
-                results.extend(results_)
+            # add edge to results and kgraph
+            kgraph["edges"][kedge_id] = kedge
+            subject_knode_id, subject_knode = await self.get_knode(kedge["subject"])
+            object_knode_id, object_knode = await self.get_knode(kedge["object"])
+            kgraph["nodes"][subject_knode_id] = subject_knode
+            kgraph["nodes"][object_knode_id] = object_knode
+            results_ = [
+                {
+                    "node_bindings": {
+                        **result["node_bindings"],
+                        qedge["subject"]: [{
+                            "id": kedge["subject"],
+                        }],
+                        qedge["object"]: [{
+                            "id": kedge["object"],
+                        }],
+                    },
+                    "edge_bindings": {
+                        **result["edge_bindings"],
+                        qedge_id: [{
+                            "id": kedge_id,
+                        }],
+                    },
+                }
+                for result in results_
+            ]
+            kgraph["nodes"].update(kgraph_["nodes"])
+            kgraph["edges"].update(kgraph_["edges"])
+            results.extend(results_)
 
         return kgraph, results
 
