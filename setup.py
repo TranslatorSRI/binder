@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='simple_kp',
-    version='2.1.0',
+    version='2.1.1',
     author='Patrick Wang',
     author_email='patrick@covar.com',
     url='https://github.com/ranking-agent/simple-kp',
