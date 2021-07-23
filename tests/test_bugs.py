@@ -58,7 +58,7 @@ async def test_unknown_predicate(connection: aiosqlite.Connection):
 
 @pytest.mark.asyncio
 async def test_subclass(connection: aiosqlite.Connection):
-    """Test unrecognized key."""
+    """Test subcategory."""
     await add_data(
         connection,
         data="""
