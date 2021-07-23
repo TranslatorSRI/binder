@@ -19,6 +19,41 @@ async def connection():
 
 
 @pytest.mark.asyncio
+async def test_extra_ids(connection: aiosqlite.Connection):
+    """Test extra qnode ids."""
+    await add_data(
+        connection,
+        data="""
+            CHEBI:6801(( category biolink:ChemicalSubstance ))
+            MONDO:0005148(( category biolink:Disease ))
+            CHEBI:6801-- predicate biolink:treats -->MONDO:0005148
+        """,
+    )
+    kp = KnowledgeProvider(connection)
+    message = {
+        "query_graph": {
+            "nodes": {
+                "n0": {
+                    "ids": ["CHEBI:6801", "CHEBI:6802", "CHEBI:6803"],
+                },
+                "n1": {
+                    "categories": ["biolink:Disease"],
+                },
+            },
+            "edges": {
+                "e01": {
+                    "subject": "n0",
+                    "object": "n1",
+                    "predicates": ["biolink:treats"],
+                },
+            },
+        }
+    }
+    kgraph, results = await kp.get_results(message["query_graph"])
+    assert len(results) == 1
+
+
+@pytest.mark.asyncio
 async def test_unknown_predicate(connection: aiosqlite.Connection):
     """Test unknown predicate."""
     await add_data(
