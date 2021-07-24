@@ -51,6 +51,11 @@ async def test_extra_ids(connection: aiosqlite.Connection):
     }
     kgraph, results = await kp.get_results(message["query_graph"])
     assert len(results) == 1
+    for kedge in kgraph["edges"].values():
+        attrs = kedge["attributes"]
+        assert len(attrs) == 1
+        assert attrs[0]["attribute_type_id"] == "biolink:knowledge_source"
+        assert attrs[0]["value"] == "infores:test"
 
 
 @pytest.mark.asyncio
