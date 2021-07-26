@@ -3,9 +3,9 @@
 Utilities for testing _other_ apps using simple-kp.
 """
 import aiosqlite
+from asgiar import ASGIAR
 from fastapi import FastAPI
 
-from asgiar import ASGIAR
 
 from .build_db import add_data
 from .router import kp_router
