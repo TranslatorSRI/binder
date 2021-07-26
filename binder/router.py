@@ -1,12 +1,12 @@
 """FastAPI router."""
 import logging
-from simple_kp.build_db import add_data
 from typing import List, Union
 
 import aiosqlite
 from fastapi import Depends, APIRouter, HTTPException
 from reasoner_pydantic import Query, Response
 
+from .build_db import add_data
 from .engine import KnowledgeProvider
 
 LOGGER = logging.getLogger(__name__)

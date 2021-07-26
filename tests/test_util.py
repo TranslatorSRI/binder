@@ -1,6 +1,6 @@
 """Test utilities."""
-from simple_kp.util import get_subcategories, get_subpredicates
-from simple_kp.engine import normalize_qgraph
+from binder.util import get_subcategories, get_subpredicates
+from binder.engine import normalize_qgraph
 
 
 def test_expand_category():

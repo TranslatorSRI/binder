@@ -1,13 +1,13 @@
 """Test testing."""
-from simple_kp.engine import KnowledgeProvider
+from binder.engine import KnowledgeProvider
 import tempfile
 
 import aiosqlite
 import httpx
 import pytest
 
-from simple_kp.build_db import add_data_from_string
-from simple_kp.testing import kp_overlay
+from binder.build_db import add_data_from_string
+from binder.testing import kp_overlay
 
 from tests.logging_setup import setup_logger
 

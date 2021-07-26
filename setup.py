@@ -1,14 +1,14 @@
-"""Setup file for simple-kp package."""
+"""Setup binder package."""
 from setuptools import setup
 
 setup(
-    name='simple_kp',
+    name='binder',
     version='3.0.0',
     author='Patrick Wang',
     author_email='patrick@covar.com',
-    url='https://github.com/ranking-agent/simple-kp',
-    description='Translator KP Registry',
-    packages=['simple_kp'],
+    url='https://github.com/TranslatorSRI/binder',
+    description='Translator *graph binder',
+    packages=['binder'],
     include_package_data=True,
     install_requires=[
         "aiosqlite>=0.16.0",

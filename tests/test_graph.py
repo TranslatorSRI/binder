@@ -1,4 +1,4 @@
-from simple_kp.graph import Graph
+from binder.graph import Graph
 
 
 def test_graph():

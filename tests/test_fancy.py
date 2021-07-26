@@ -2,8 +2,8 @@
 import aiosqlite
 import pytest
 
-from simple_kp.build_db import add_data_from_string
-from simple_kp.engine import KnowledgeProvider
+from binder.build_db import add_data_from_string
+from binder.engine import KnowledgeProvider
 
 from .logging_setup import setup_logger
 

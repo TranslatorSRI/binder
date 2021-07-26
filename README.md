@@ -1,7 +1,7 @@
-# simple-kp
+# Binder
 
 ## testing
 
 ```bash
-python -m pytest --cov=simple_kp --cov=term-missing tests/
+python -m pytest --cov=binder --cov=term-missing tests/
 ```

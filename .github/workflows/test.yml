@@ -29,7 +29,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          python -m pytest --cov=simple_kp --cov-report=xml tests/
+          python -m pytest --cov=binder --cov-report=xml tests/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
