@@ -1,5 +1,6 @@
 """FastAPI router."""
 import logging
+from simple_kp.build_db import add_data
 from typing import List, Union
 
 import aiosqlite
@@ -24,7 +25,7 @@ def get_kp(
 
 
 def kp_router(
-        database_file: Union[str, aiosqlite.Connection],
+        database_file: Union[str, aiosqlite.Connection] = ":memory:",
         **kwargs,
 ):
     """Add KP to server."""
@@ -33,7 +34,6 @@ def kp_router(
     @router.post("/query", response_model=Response)
     async def answer_question(
             query: Query,
-            kp: KnowledgeProvider = Depends(get_kp(database_file))
     ) -> Response:
         """Get results for query graph."""
         query = query.dict(exclude_unset=True)
@@ -41,22 +41,42 @@ def kp_router(
         if len(workflow) > 1:
             raise HTTPException(400, "Binder does not support workflows of length >1")
         operation = workflow[0]
+        qgraph = query["message"]["query_graph"]
         if operation == "lookup":
-            qgraph = query["message"]["query_graph"]
-
-            kgraph, results = await kp.get_results(qgraph)
-
-            response = {
-                "message": {
-                    "knowledge_graph": kgraph,
-                    "results": results,
-                    "query_graph": qgraph,
-                }
-            }
+            async with KnowledgeProvider(database_file) as kp:
+                kgraph, results = await kp.get_results(qgraph)
         elif operation == "bind":
-            raise NotImplementedError()
+            kgraph = query["message"]["knowledge_graph"]
+            knodes = [
+                {
+                    "id": knode_id,
+                    "category": knode.get("categories", ["biolink:NamedThing"])[0],
+                }
+                for knode_id, knode in kgraph["nodes"].items()
+            ]
+            kedges = [
+                {
+                    "id": kedge_id,
+                    "subject": kedge["subject"],
+                    "predicate": kedge["predicate"],
+                    "object": kedge["object"],
+                }
+                for kedge_id, kedge in kgraph["edges"].items()
+            ]
+
+            async with KnowledgeProvider(":memory:") as kp:
+                await add_data(kp.db, knodes, kedges)
+                kgraph, results = await kp.get_results(qgraph)
         else:
             raise HTTPException(400, f"Unsupported operation {operation}")
+
+        response = {
+            "message": {
+                "knowledge_graph": kgraph,
+                "results": results,
+                "query_graph": qgraph,
+            }
+        }
         return response
 
     @router.get("/ops")
