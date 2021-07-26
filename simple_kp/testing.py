@@ -23,7 +23,7 @@ async def kp_app(**kwargs):
         await add_data(connection, **kwargs)
 
         # add kp to app
-        app.include_router(kp_router(connection))
+        app.include_router(kp_router(connection, name=kwargs.get("name")))
         yield app
 
 
@@ -32,7 +32,7 @@ async def kp_overlay(host, **kwargs):
     """KP(s) server context manager."""
     async with AsyncExitStack() as stack:
         app = await stack.enter_async_context(
-            kp_app(**kwargs)
+            kp_app(**kwargs, name=host)
         )
         await stack.enter_async_context(
             ASGIAR(app, host=host)

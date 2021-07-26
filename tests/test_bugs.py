@@ -29,7 +29,7 @@ async def test_extra_ids(connection: aiosqlite.Connection):
             CHEBI:6801-- predicate biolink:treats -->MONDO:0005148
         """,
     )
-    kp = KnowledgeProvider(connection)
+    kp = KnowledgeProvider(connection, name="test")
     message = {
         "query_graph": {
             "nodes": {

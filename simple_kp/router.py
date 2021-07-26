@@ -11,17 +11,21 @@ from .engine import KnowledgeProvider
 LOGGER = logging.getLogger(__name__)
 
 
-def get_kp(database_file: Union[str, aiosqlite.Connection]):
+def get_kp(
+    database_file: Union[str, aiosqlite.Connection],
+    **kwargs,
+):
     """Get KP dependable."""
     async def kp_dependable():
         """Get knowledge provider."""
-        async with KnowledgeProvider(database_file) as kp:
+        async with KnowledgeProvider(database_file, **kwargs) as kp:
             yield kp
     return kp_dependable
 
 
 def kp_router(
         database_file: Union[str, aiosqlite.Connection],
+        **kwargs,
 ):
     """Add KP to server."""
     router = APIRouter()

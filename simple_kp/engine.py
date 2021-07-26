@@ -6,7 +6,7 @@ import logging
 import os
 import re
 import sqlite3
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import aiosqlite
 
@@ -58,6 +58,7 @@ class KnowledgeProvider():
     def __init__(
             self,
             arg: Union[str, aiosqlite.Connection] = ":memory:",
+            name: Optional[str] = None,
     ):
         """Initialize."""
         if isinstance(arg, str):
@@ -75,6 +76,8 @@ class KnowledgeProvider():
             raise ValueError(
                 "arg should be of type str or aiosqlite.Connection"
             )
+        if name is not None:
+            self.name = name
 
     async def __aenter__(self):
         """Enter context."""
