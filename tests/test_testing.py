@@ -6,7 +6,7 @@ import aiosqlite
 import httpx
 import pytest
 
-from simple_kp.build_db import add_data
+from simple_kp.build_db import add_data_from_string
 from simple_kp.testing import kp_overlay
 
 from tests.logging_setup import setup_logger
@@ -57,7 +57,7 @@ async def test_database_file():
     filename = f.name
     async with aiosqlite.connect(filename) as connection:
         # add data to sqlite
-        await add_data(
+        await add_data_from_string(
             connection,
             data="""
                 MONDO:0005148(( category biolink:Disease ))

@@ -3,7 +3,7 @@ import pytest
 
 import aiosqlite
 
-from simple_kp.build_db import add_data
+from simple_kp.build_db import add_data_from_string
 from simple_kp.engine import KnowledgeProvider
 
 from tests.logging_setup import setup_logger
@@ -21,7 +21,7 @@ async def connection():
 @pytest.mark.asyncio
 async def test_ops(connection: aiosqlite.Connection):
     """Test KP operations."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
         MONDO:0005148(( category biolink:Disease ))
@@ -33,7 +33,7 @@ async def test_ops(connection: aiosqlite.Connection):
     ops = await kp.get_operations()
     assert len(ops) == 1
 
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
         CHEBI:6801(( category biolink:ChemicalSubstance ))
@@ -49,7 +49,7 @@ async def test_ops(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_ops_multiple_categories(connection: aiosqlite.Connection):
     """Test KP operations."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
         MONDO:0005148(( category biolink:Disease ))
@@ -65,7 +65,7 @@ async def test_ops_multiple_categories(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_prefixes(connection: aiosqlite.Connection):
     """Test CURIE prefixes."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
         MONDO:0005148(( category biolink:Disease ))

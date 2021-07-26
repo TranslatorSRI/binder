@@ -67,14 +67,21 @@ async def get_data_from_string(data: str):
     return list(nodes.values()), list(edges.values())
 
 
-async def add_data(
+async def add_data_from_string(
         connection: aiosqlite.Connection,
         data: str,
         **kwargs,
 ):
     """Add data to SQLite database."""
     nodes, edges = await get_data_from_string(data)
+    await add_data(connection, nodes, edges)
 
+
+async def add_data(
+    connection: aiosqlite.Connection,
+    nodes,
+    edges,
+):
     if nodes:
         await connection.execute("CREATE TABLE IF NOT EXISTS nodes ({0})".format(
             ", ".join([f"{val} text" for val in nodes[0]])

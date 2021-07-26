@@ -2,7 +2,7 @@
 import aiosqlite
 import pytest
 
-from simple_kp.build_db import add_data
+from simple_kp.build_db import add_data_from_string
 from simple_kp.engine import KnowledgeProvider
 
 from .logging_setup import setup_logger
@@ -21,7 +21,7 @@ async def connection():
 @pytest.mark.asyncio
 async def test_extra_ids(connection: aiosqlite.Connection):
     """Test extra qnode ids."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             CHEBI:6801(( category biolink:ChemicalSubstance ))
@@ -61,7 +61,7 @@ async def test_extra_ids(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_unknown_predicate(connection: aiosqlite.Connection):
     """Test unknown predicate."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             CHEBI:6801(( category biolink:ChemicalSubstance ))
@@ -99,7 +99,7 @@ async def test_unknown_predicate(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_subclass(connection: aiosqlite.Connection):
     """Test unrecognized key."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             CHEBI:6801(( category biolink:ChemicalSubstance ))
@@ -137,7 +137,7 @@ async def test_subclass(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_unrecognized_key(connection: aiosqlite.Connection):
     """Test unrecognized key."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))
@@ -174,7 +174,7 @@ async def test_unrecognized_key(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_ignored_key(connection: aiosqlite.Connection):
     """Test ignored key."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))
