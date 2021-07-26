@@ -86,3 +86,17 @@ async def test_lookup():
         response = await client.post("http://kp/query", json=request)
     assert response.status_code == 200
     assert response.json()["message"]["results"]
+
+
+@kp_overlay("kp", data="""
+    MONDO:0005148(( category biolink:Disease ))
+    MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
+    CHEBI:6801(( category biolink:ChemicalSubstance ))
+    """
+)
+@pytest.mark.asyncio
+async def test_metakg():
+    """Test /metakg."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get("http://kp/meta_knowledge_graph")
+    assert response.status_code == 200
