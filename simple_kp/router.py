@@ -3,7 +3,7 @@ import logging
 from typing import List, Union
 
 import aiosqlite
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, HTTPException
 from reasoner_pydantic import Query, Response
 
 from .engine import KnowledgeProvider
@@ -37,17 +37,26 @@ def kp_router(
     ) -> Response:
         """Get results for query graph."""
         query = query.dict(exclude_unset=True)
-        qgraph = query["message"]["query_graph"]
+        workflow = query.get("workflow", ["lookup"])
+        if len(workflow) > 1:
+            raise HTTPException(400, "Binder does not support workflows of length >1")
+        operation = workflow[0]
+        if operation == "lookup":
+            qgraph = query["message"]["query_graph"]
 
-        kgraph, results = await kp.get_results(qgraph)
+            kgraph, results = await kp.get_results(qgraph)
 
-        response = {
-            "message": {
-                "knowledge_graph": kgraph,
-                "results": results,
-                "query_graph": qgraph,
+            response = {
+                "message": {
+                    "knowledge_graph": kgraph,
+                    "results": results,
+                    "query_graph": qgraph,
+                }
             }
-        }
+        elif operation == "bind":
+            raise NotImplementedError()
+        else:
+            raise HTTPException(400, f"Unsupported operation {operation}")
         return response
 
     @router.get("/ops")
