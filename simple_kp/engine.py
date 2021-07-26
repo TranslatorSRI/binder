@@ -275,6 +275,11 @@ class KnowledgeProvider():
             kgraph["edges"].update(kgraph_["edges"])
             results.extend(results_)
 
+        for kedge in kgraph["edges"].values():
+            kedge["attributes"] = [{
+                "attribute_type_id": "biolink:knowledge_source",
+                "value": f"infores:{self.name}",
+            }]
         return kgraph, results
 
     async def get_knode(self, knode_id: str) -> Tuple[str, Dict]:
