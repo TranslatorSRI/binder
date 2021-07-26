@@ -4,8 +4,8 @@ import os
 
 
 def print_green(s):
-    GREEN = '\033[92m'
-    ENDC = '\033[0m'
+    GREEN = "\033[92m"
+    ENDC = "\033[0m"
     print(f"{GREEN}{s}{ENDC}")
 
 
@@ -37,5 +37,5 @@ def main():
     command_func(extra_args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
