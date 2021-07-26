@@ -79,22 +79,6 @@ def kp_router(
         }
         return response
 
-    @router.get("/ops")
-    async def get_operations(
-            kp: KnowledgeProvider = Depends(get_kp(database_file)),
-    ):
-        """Get KP operations."""
-        return await kp.get_operations()
-
-    @router.get("/metadata")
-    async def get_metadata(
-            kp: KnowledgeProvider = Depends(get_kp(database_file)),
-    ):
-        """Get metadata."""
-        return {
-            "curie_prefixes": await kp.get_curie_prefixes(),
-        }
-
     @router.get("/meta_knowledge_graph")
     async def get_metakg(
             kp: KnowledgeProvider = Depends(get_kp(database_file)),
