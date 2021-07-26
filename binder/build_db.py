@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 """Data I/O."""
-import csv
 import re
 import uuid
 

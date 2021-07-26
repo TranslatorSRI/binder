@@ -1,6 +1,6 @@
 """FastAPI router."""
 import logging
-from typing import List, Union
+from typing import Union
 
 import aiosqlite
 from fastapi import Depends, APIRouter, HTTPException
