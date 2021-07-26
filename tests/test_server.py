@@ -2,7 +2,7 @@
 import httpx
 import pytest
 
-from simple_kp.testing import kp_overlay
+from binder.testing import kp_overlay
 
 from tests.logging_setup import setup_logger
 

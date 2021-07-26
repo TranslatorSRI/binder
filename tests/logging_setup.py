@@ -34,7 +34,7 @@ class ColoredFormatter(logging.Formatter):
 
 def setup_logger():
     """Set up Strider logger."""
-    logger = logging.getLogger("simple_kp")
+    logger = logging.getLogger("binder")
     logger.setLevel(logging.DEBUG)
     handler = logging.StreamHandler()
     handler.setLevel(logging.DEBUG)
