@@ -7,7 +7,7 @@ from asgiar import ASGIAR
 from fastapi import FastAPI
 
 
-from .build_db import add_data
+from .build_db import add_data_from_string
 from .router import kp_router
 
 from ._contextlib import AsyncExitStack, asynccontextmanager
@@ -20,7 +20,7 @@ async def kp_app(**kwargs):
 
     async with aiosqlite.connect(":memory:") as connection:
         # add data to sqlite
-        await add_data(connection, **kwargs)
+        await add_data_from_string(connection, **kwargs)
 
         # add kp to app
         app.include_router(kp_router(connection, name=kwargs.get("name")))

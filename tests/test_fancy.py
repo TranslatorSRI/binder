@@ -2,7 +2,7 @@
 import aiosqlite
 import pytest
 
-from simple_kp.build_db import add_data
+from simple_kp.build_db import add_data_from_string
 from simple_kp.engine import KnowledgeProvider
 
 from .logging_setup import setup_logger
@@ -21,7 +21,7 @@ async def connection():
 @pytest.mark.asyncio
 async def test_loop(connection: aiosqlite.Connection):
     """Test a simple loop."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))
@@ -73,7 +73,7 @@ async def test_loop(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_branch(connection: aiosqlite.Connection):
     """Test a simple branch."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))

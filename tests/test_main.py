@@ -4,7 +4,7 @@ import pytest
 
 from reasoner_pydantic import KnowledgeGraph, Result
 
-from simple_kp.build_db import add_data
+from simple_kp.build_db import add_data_from_string
 from simple_kp.engine import KnowledgeProvider
 
 from .logging_setup import setup_logger
@@ -23,7 +23,7 @@ async def connection():
 @pytest.mark.asyncio
 async def test_reverse(connection: aiosqlite.Connection):
     """Test simple KP."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))
@@ -59,7 +59,7 @@ async def test_reverse(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_list_properties(connection: aiosqlite.Connection):
     """Test that we correctly handle query graph where categories, ids, and predicates are lists."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             CHEBI:136043(( category biolink:ChemicalSubstance ))
@@ -95,7 +95,7 @@ async def test_list_properties(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_isittrue(connection: aiosqlite.Connection):
     """Test is-it-true-that query."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))
@@ -132,7 +132,7 @@ async def test_isittrue(connection: aiosqlite.Connection):
 @pytest.mark.asyncio
 async def test_fail(connection: aiosqlite.Connection):
     """Test simple KP."""
-    await add_data(
+    await add_data_from_string(
         connection,
         data="""
             MONDO:0005148(( category biolink:Disease ))
