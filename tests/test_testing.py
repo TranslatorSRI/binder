@@ -48,6 +48,13 @@ async def test_overlay():
     async with httpx.AsyncClient() as client:
         response = await client.post("http://kp/query", json=request)
     response.raise_for_status()
+    kedges = response.json()["message"]["knowledge_graph"]["edges"]
+    for kedge in kedges.values():
+        assert any(
+            attribute["attribute_type_id"] == "biolink:knowledge_source"
+            and attribute["value"] == "infores:kp"
+            for attribute in kedge["attributes"]
+        )
 
 
 @pytest.mark.asyncio
