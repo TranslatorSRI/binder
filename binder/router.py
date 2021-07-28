@@ -43,7 +43,7 @@ def kp_router(
         operation = workflow[0]
         qgraph = query["message"]["query_graph"]
         if operation == "lookup":
-            async with KnowledgeProvider(database_file) as kp:
+            async with KnowledgeProvider(database_file, **kwargs) as kp:
                 kgraph, results = await kp.get_results(qgraph)
         elif operation == "bind":
             kgraph = query["message"]["knowledge_graph"]
@@ -64,7 +64,7 @@ def kp_router(
                 for kedge_id, kedge in kgraph["edges"].items()
             ]
 
-            async with KnowledgeProvider(":memory:") as kp:
+            async with KnowledgeProvider(":memory:", **kwargs) as kp:
                 await add_data(kp.db, knodes, kedges)
                 kgraph, results = await kp.get_results(qgraph)
         else:
