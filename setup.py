@@ -12,7 +12,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "aiosqlite>=0.16.0",
-        "bmt-lite-1.8.2>=1.0.2,<2.0",
+        "bmt-lite-2.1.0>=1.0.2,<2.0",
         "fastapi>=0.65.2",
         "reasoner-pydantic>=1.1.2.1,<1.1.3",
     ],
