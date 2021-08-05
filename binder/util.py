@@ -9,6 +9,8 @@ BMT = Toolkit()
 def get_subcategories(category):
     """Get sub-categories, according to the Biolink model."""
     categories = BMT.get_descendants(category, formatted=True, reflexive=True) or [category]
+    if "biolink:SmallMolecule" in categories:
+        categories.append("biolink:ChemicalSubstance")
     return [
         category.replace("_", "")
         for category in categories
