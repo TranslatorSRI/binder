@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import aiosqlite
 
 from .graph import Graph
-from .util import build_conditions, get_subpredicates, is_symmetric, to_list, NoAnswersException, get_subcategories
+from .util import build_conditions, get_subpredicates, is_symmetric, NoAnswersException, get_subcategories
 
 LOGGER = logging.getLogger(__name__)
 
