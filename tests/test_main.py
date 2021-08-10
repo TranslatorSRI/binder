@@ -234,4 +234,6 @@ async def test_symmetric(connection: aiosqlite.Connection):
         }
     }
     kgraph, results = await kp.get_results(message["query_graph"])
-    assert results
+    assert len(results) == 1
+    assert results[0]["node_bindings"]["n0"][0]["id"] == "MONDO:0005148"
+    assert results[0]["node_bindings"]["n1"][0]["id"] == "CHEBI:6801"
