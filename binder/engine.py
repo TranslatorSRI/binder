@@ -212,20 +212,22 @@ class KnowledgeProvider():
             return {"nodes": dict(), "edges": dict()}, [{"node_bindings": dict(), "edge_bindings": dict()}]
         kgraph = {"nodes": dict(), "edges": dict()}
         results = []
+
         try:
-            source_qnode_id, source_qnode = next(
-                (key, qnode)
-                for key, qnode in qgraph["nodes"].items()
-                if qnode.get("ids", None) is not None
+            qedge_id, qedge = next(
+                (qedge_id, qedge)
+                for qedge_id, qedge in qgraph["edges"].items()
+                if any(
+                    qnode.get("ids", [])
+                    for qnode in (
+                        qgraph["nodes"][qedge["subject"]],
+                        qgraph["nodes"][qedge["object"]],
+                    )
+                )
             )
         except StopIteration:
-            raise RuntimeError("Cannot find qnode with ids in %s", str(qgraph["nodes"]))
-
-        qedge_id, qedge = next(
-            (qedge_id, qedge)
-            for qedge_id, qedge in list(qgraph["edges"].items())
-            if source_qnode_id in (qedge["subject"], qedge["object"])
-        )
+            raise RuntimeError("Cannot find qedge with pinned endpoint")
+        
         qgraph["edges"].pop(qedge_id)
 
         # get kedges for qedge
