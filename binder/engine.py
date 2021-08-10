@@ -227,8 +227,6 @@ class KnowledgeProvider():
             )
         except StopIteration:
             raise RuntimeError("Cannot find qedge with pinned endpoint")
-        
-        qgraph["edges"].pop(qedge_id)
 
         # get kedges for qedge
         constraints = self.get_edge_constraints(qedge, qgraph)
@@ -248,71 +246,91 @@ class KnowledgeProvider():
             kedges = await self.get_kedges(**constraints)
 
             for kedge_id, kedge in kedges.items():
+                subject_knode_id, subject_knode = await self.get_knode(kedge["subject"])
+                object_knode_id, object_knode = await self.get_knode(kedge["object"])
+
                 LOGGER.debug(
                     "Expanding along edge %s/%s...",
                     qedge_id,
                     kedge_id,
                 )
-                # now solve the smaller question
 
+                # add edge to results and kgraph
+                kgraph__ = {
+                    "nodes": {
+                        subject_knode_id: subject_knode,
+                        object_knode_id: object_knode,
+                    },
+                    "edges": {
+                        kedge_id: kedge,
+                    },
+                }
+                if flipped:
+                    results__ = [
+                        {
+                            "node_bindings": {
+                                qedge["subject"]: [{
+                                    "id": kedge["object"],
+                                }],
+                                qedge["object"]: [{
+                                    "id": kedge["subject"],
+                                }],
+                            },
+                            "edge_bindings": {
+                                qedge_id: [{
+                                    "id": kedge_id,
+                                }],
+                            },
+                        }
+                    ]
+                else:
+                    results__ = [
+                        {
+                            "node_bindings": {
+                                qedge["subject"]: [{
+                                    "id": kedge["subject"],
+                                }],
+                                qedge["object"]: [{
+                                    "id": kedge["object"],
+                                }],
+                            },
+                            "edge_bindings": {
+                                qedge_id: [{
+                                    "id": kedge_id,
+                                }],
+                            },
+                        }
+                    ]
+
+                # now solve the smaller question
                 qgraph__ = copy.deepcopy(qgraph)
+                # remove edge
+                qgraph__["edges"].pop(qedge_id)
                 # pin node
                 qgraph__["nodes"][qedge["subject"]]["ids"] = [kedge["subject"]]
                 qgraph__["nodes"][qedge["object"]]["ids"] = [kedge["object"]]
                 # remove orphaned nodes
                 qgraph__.remove_orphaned()
-
                 kgraph_, results_ = await self.lookup(qgraph__)
 
-                # add edge to results and kgraph
-                kgraph["edges"][kedge_id] = kedge
-                subject_knode_id, subject_knode = await self.get_knode(kedge["subject"])
-                object_knode_id, object_knode = await self.get_knode(kedge["object"])
-                kgraph["nodes"][subject_knode_id] = subject_knode
-                kgraph["nodes"][object_knode_id] = object_knode
+                # combine one-hop with subquery results
+                results_ = [
+                    {
+                        "node_bindings": {
+                            **result_a["node_bindings"],
+                            **result_b["node_bindings"],
+                        },
+                        "edge_bindings": {
+                            **result_a["edge_bindings"],
+                            **result_b["edge_bindings"],
+                        },
+                    }
+                    for result_a, result_b in itertools.product(results_, results__)
+                ]
+                kgraph_["nodes"].update(kgraph__["nodes"])
+                kgraph_["edges"].update(kgraph__["edges"])
 
-                if flipped:
-                    results_ = [
-                        {
-                            "node_bindings": {
-                                **result["node_bindings"],
-                                qedge["subject"]: [{
-                                    "id": kedge["object"],
-                                }],
-                                qedge["object"]: [{
-                                    "id": kedge["subject"],
-                                }],
-                            },
-                            "edge_bindings": {
-                                **result["edge_bindings"],
-                                qedge_id: [{
-                                    "id": kedge_id,
-                                }],
-                            },
-                        }
-                        for result in results_
-                    ]
-                else:
-                    results_ = [
-                        {
-                            "node_bindings": {
-                                **result["node_bindings"],
-                                qedge["subject"]: [{
-                                    "id": kedge["subject"],
-                                }],
-                                qedge["object"]: [{
-                                    "id": kedge["object"],
-                                }],
-                            },
-                            "edge_bindings": {
-                                **result["edge_bindings"],
-                                qedge_id: [{
-                                    "id": kedge_id,
-                                }],
-                            },
-                        }
-                        for result in results_
-                    ]
+                # aggregate results
                 kgraph["nodes"].update(kgraph_["nodes"])
                 kgraph["edges"].update(kgraph_["edges"])
                 results.extend(results_)
