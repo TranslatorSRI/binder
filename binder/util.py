@@ -33,7 +33,10 @@ def get_subpredicates(predicate):
 
 def is_symmetric(predicate):
     """Determine whether predicate is symmetric."""
-    return BMT.get_element(predicate).symmetric
+    el = BMT.get_element(predicate)
+    if el is None:
+        return False
+    return el.symmetric
 
 
 def to_list(scalar_or_list):
