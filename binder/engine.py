@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import aiosqlite
 
 from .graph import Graph
-from .util import get_subpredicates, to_list, NoAnswersException, get_subcategories
+from .util import build_conditions, get_subpredicates, to_list, NoAnswersException, get_subcategories
 
 LOGGER = logging.getLogger(__name__)
 
@@ -151,14 +151,7 @@ class KnowledgeProvider():
     async def get_kedges(self, **kwargs):
         """Get kedges."""
         assert kwargs
-        conditions = []
-        for key, value in kwargs.items():
-            if isinstance(value, list):
-                placeholders = ", ".join("?" for _ in value)
-                conditions.append(f"{key} in ({placeholders})")
-            else:
-                conditions.append(f"{key} = ?")
-        conditions = " AND ".join(conditions)
+        conditions, values = build_conditions(**kwargs)
         try:
             async with self.db.execute(
                     (
@@ -167,11 +160,7 @@ class KnowledgeProvider():
                         "JOIN nodes AS subject ON edge.subject = subject.id "
                         "JOIN nodes AS object ON edge.object = object.id "
                     ) + "WHERE " + conditions,
-                    list(
-                        x
-                        for value in kwargs.values()
-                        for x in to_list(value)
-                    ),
+                    values,
             ) as cursor:
                 rows = await cursor.fetchall()
         except sqlite3.OperationalError as err:
@@ -219,12 +208,22 @@ class KnowledgeProvider():
         for key, value in qedge.items():
             if key in ("subject", "object"):
                 continue
-            kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
+            if isinstance(value, list) and len(value) == 1:
+                value = value[0]
+            if isinstance(value, list):
+                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = {"$in": value}
+            else:
+                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
         for role in ("subject", "object"):
             for key, value in qgraph_["nodes"][qedge[role]].items():
                 if key in ():
                     continue
-                kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
+                if isinstance(value, list) and len(value) == 1:
+                    value = value[0]
+                if isinstance(value, list):
+                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = {"$in": value}
+                else:
+                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
 
         kedges = await self.get_kedges(**kwargs)
 
