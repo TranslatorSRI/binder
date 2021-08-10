@@ -199,3 +199,39 @@ async def test_fail(connection: aiosqlite.Connection):
     }
     kgraph, results = await kp.get_results(message["query_graph"])
     assert results == []
+
+
+@pytest.mark.asyncio
+async def test_symmetric(connection: aiosqlite.Connection):
+    """Test symmetric predicate."""
+    await add_data_from_string(
+        connection,
+        data="""
+            MONDO:0005148(( category biolink:Disease ))
+            MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
+            CHEBI:6801(( category biolink:ChemicalSubstance ))
+        """,
+    )
+    kp = KnowledgeProvider(connection)
+    message = {
+        "query_graph": {
+            "nodes": {
+                "n0": {
+                    "categories": ["biolink:Disease"],
+                    "ids": ["MONDO:0005148"],
+                },
+                "n1": {
+                    "categories": ["biolink:ChemicalSubstance"],
+                },
+            },
+            "edges": {
+                "e01": {
+                    "subject": "n0",
+                    "object": "n1",
+                    "predicates": ["biolink:related_to"],
+                },
+            },
+        }
+    }
+    kgraph, results = await kp.get_results(message["query_graph"])
+    assert results

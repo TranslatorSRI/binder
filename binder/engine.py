@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import aiosqlite
 
 from .graph import Graph
-from .util import build_conditions, get_subpredicates, to_list, NoAnswersException, get_subcategories
+from .util import build_conditions, get_subpredicates, is_symmetric, to_list, NoAnswersException, get_subcategories
 
 LOGGER = logging.getLogger(__name__)
 
@@ -175,6 +175,32 @@ class KnowledgeProvider():
             for row in rows
         }
 
+    def get_edge_constraints(
+        self, qedge, qgraph,
+    ):
+        """Get edge constraints."""
+        kwargs = dict()
+        for key, value in qedge.items():
+            if key in ("subject", "object"):
+                continue
+            if isinstance(value, list) and len(value) == 1:
+                value = value[0]
+            if isinstance(value, list):
+                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = {"$in": value}
+            else:
+                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
+        for role in ("subject", "object"):
+            for key, value in qgraph["nodes"][qedge[role]].items():
+                if key in ():
+                    continue
+                if isinstance(value, list) and len(value) == 1:
+                    value = value[0]
+                if isinstance(value, list):
+                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = {"$in": value}
+                else:
+                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
+        return kwargs
+
     async def lookup(
             self,
             qgraph: Graph,
@@ -204,28 +230,20 @@ class KnowledgeProvider():
         )
 
         # get kedges for qedge
-        kwargs = dict()
-        for key, value in qedge.items():
-            if key in ("subject", "object"):
-                continue
-            if isinstance(value, list) and len(value) == 1:
-                value = value[0]
-            if isinstance(value, list):
-                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = {"$in": value}
-            else:
-                kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
-        for role in ("subject", "object"):
-            for key, value in qgraph_["nodes"][qedge[role]].items():
-                if key in ():
-                    continue
-                if isinstance(value, list) and len(value) == 1:
-                    value = value[0]
-                if isinstance(value, list):
-                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = {"$in": value}
-                else:
-                    kwargs[f"{role}.{KEY_MAP.get(key, key)}"] = value
+        constraints = self.get_edge_constraints(qedge, qgraph_)
+        if any(
+            is_symmetric(predicate)
+            for predicate in qedge.get("predicates", [])
+        ):
+            symmetric_qedge = copy.deepcopy(qedge)
+            symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
 
-        kedges = await self.get_kedges(**kwargs)
+            constraints = {"$or": [
+                constraints,
+                self.get_edge_constraints(symmetric_qedge, qgraph_),
+            ]}
+
+        kedges = await self.get_kedges(**constraints)
 
         for kedge_id, kedge in kedges.items():
             LOGGER.debug(
