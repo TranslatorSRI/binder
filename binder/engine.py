@@ -176,9 +176,11 @@ class KnowledgeProvider():
         }
 
     def get_edge_constraints(
-        self, qedge, qgraph,
+        self, qgraph,
     ):
         """Get edge constraints."""
+        assert len(qgraph["edges"]) == 1
+        qedge = next(iter(qgraph["edges"].values()))
         kwargs = dict()
         for key, value in qedge.items():
             if key in ("subject", "object"):
@@ -228,8 +230,19 @@ class KnowledgeProvider():
         except StopIteration:
             raise RuntimeError("Cannot find qedge with pinned endpoint")
 
+        qedge = qgraph["edges"][qedge_id]
+        onehop = {
+            "nodes": {
+                key: value
+                for key, value in qgraph["nodes"].items()
+                if key in (qedge["subject"], qedge["object"])
+            }, 
+            "edges": {
+                qedge_id: qedge
+            }
+        }
         # get kedges for qedge
-        constraints = self.get_edge_constraints(qedge, qgraph)
+        constraints = self.get_edge_constraints(onehop)
         kedges = await self.get_kedges(**constraints)
         knode_ids = {
             knode_id
@@ -270,10 +283,9 @@ class KnowledgeProvider():
             is_symmetric(predicate)
             for predicate in qedge.get("predicates", [])
         ):
-            symmetric_qedge = copy.deepcopy(qedge)
-            symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
+            qedge["subject"], qedge["object"] = qedge["object"], qedge["subject"]
 
-            symmetric_constraints = self.get_edge_constraints(symmetric_qedge, qgraph)
+            symmetric_constraints = self.get_edge_constraints(onehop)
             symmetric_kedges = await self.get_kedges(**symmetric_constraints)
             knode_ids = {
                 knode_id
@@ -301,10 +313,10 @@ class KnowledgeProvider():
                 {
                     "node_bindings": {
                         qedge["subject"]: [{
-                            "id": kedge["object"],
+                            "id": kedge["subject"],
                         }],
                         qedge["object"]: [{
-                            "id": kedge["subject"],
+                            "id": kedge["object"],
                         }],
                     },
                     "edge_bindings": {
