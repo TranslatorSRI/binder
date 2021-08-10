@@ -230,7 +230,42 @@ class KnowledgeProvider():
 
         # get kedges for qedge
         constraints = self.get_edge_constraints(qedge, qgraph)
-        symmetric_constraints = None
+        kedges = await self.get_kedges(**constraints)
+        knode_ids = {
+            knode_id
+            for kedge in kedges.values()
+            for knode_id in (
+                kedge["subject"],
+                kedge["object"],
+            )
+        }
+        knodes = dict([
+            await self.get_knode(knode_id)
+            for knode_id in knode_ids
+        ])
+        kgraph__ = {
+            "nodes": knodes,
+            "edges": kedges,
+        }
+        results__ = [
+            {
+                "node_bindings": {
+                    qedge["subject"]: [{
+                        "id": kedge["subject"],
+                    }],
+                    qedge["object"]: [{
+                        "id": kedge["object"],
+                    }],
+                },
+                "edge_bindings": {
+                    qedge_id: [{
+                        "id": kedge_id,
+                    }],
+                },
+            }
+            for kedge_id, kedge in kedges.items()
+        ]
+
         if any(
             is_symmetric(predicate)
             for predicate in qedge.get("predicates", [])
@@ -239,101 +274,103 @@ class KnowledgeProvider():
             symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
 
             symmetric_constraints = self.get_edge_constraints(symmetric_qedge, qgraph)
-
-        for flipped, constraints in ((False, constraints), (True, symmetric_constraints)):
-            if constraints is None:
-                continue
-            kedges = await self.get_kedges(**constraints)
-
-            for kedge_id, kedge in kedges.items():
-                subject_knode_id, subject_knode = await self.get_knode(kedge["subject"])
-                object_knode_id, object_knode = await self.get_knode(kedge["object"])
-
-                LOGGER.debug(
-                    "Expanding along edge %s/%s...",
-                    qedge_id,
-                    kedge_id,
+            symmetric_kedges = await self.get_kedges(**symmetric_constraints)
+            knode_ids = {
+                knode_id
+                for kedge in symmetric_kedges.values()
+                for knode_id in (
+                    kedge["subject"],
+                    kedge["object"],
                 )
-
-                # add edge to results and kgraph
-                kgraph__ = {
-                    "nodes": {
-                        subject_knode_id: subject_knode,
-                        object_knode_id: object_knode,
+            }
+            symmetric_knodes = dict([
+                await self.get_knode(knode_id)
+                for knode_id in knode_ids
+            ])
+            kgraph__ = {
+                "nodes": {
+                    **kgraph__["nodes"],
+                    **symmetric_knodes,
+                },
+                "edges": {
+                    **kgraph__["edges"],
+                    **symmetric_kedges,
+                }
+            }
+            results__ += [
+                {
+                    "node_bindings": {
+                        qedge["subject"]: [{
+                            "id": kedge["object"],
+                        }],
+                        qedge["object"]: [{
+                            "id": kedge["subject"],
+                        }],
                     },
-                    "edges": {
-                        kedge_id: kedge,
+                    "edge_bindings": {
+                        qedge_id: [{
+                            "id": kedge_id,
+                        }],
                     },
                 }
-                if flipped:
-                    results__ = [
-                        {
-                            "node_bindings": {
-                                qedge["subject"]: [{
-                                    "id": kedge["object"],
-                                }],
-                                qedge["object"]: [{
-                                    "id": kedge["subject"],
-                                }],
-                            },
-                            "edge_bindings": {
-                                qedge_id: [{
-                                    "id": kedge_id,
-                                }],
-                            },
-                        }
-                    ]
-                else:
-                    results__ = [
-                        {
-                            "node_bindings": {
-                                qedge["subject"]: [{
-                                    "id": kedge["subject"],
-                                }],
-                                qedge["object"]: [{
-                                    "id": kedge["object"],
-                                }],
-                            },
-                            "edge_bindings": {
-                                qedge_id: [{
-                                    "id": kedge_id,
-                                }],
-                            },
-                        }
-                    ]
+                for kedge_id, kedge in symmetric_kedges.items()
+            ]
 
-                # now solve the smaller question
-                qgraph__ = copy.deepcopy(qgraph)
-                # remove edge
-                qgraph__["edges"].pop(qedge_id)
-                # pin node
-                qgraph__["nodes"][qedge["subject"]]["ids"] = [kedge["subject"]]
-                qgraph__["nodes"][qedge["object"]]["ids"] = [kedge["object"]]
-                # remove orphaned nodes
-                qgraph__.remove_orphaned()
-                kgraph_, results_ = await self.lookup(qgraph__)
+        for result in results__:
+            LOGGER.debug(
+                "Expanding from result %s...",
+                result,
+            )
 
-                # combine one-hop with subquery results
-                results_ = [
-                    {
-                        "node_bindings": {
-                            **result_a["node_bindings"],
-                            **result_b["node_bindings"],
-                        },
-                        "edge_bindings": {
-                            **result_a["edge_bindings"],
-                            **result_b["edge_bindings"],
-                        },
-                    }
-                    for result_a, result_b in itertools.product(results_, results__)
+            # add edge to results and kgraph
+            kgraph___ = {
+                "nodes": {
+                    qnode_id: kgraph__["nodes"][binding["id"]]
+                    for qnode_id, bindings in result["node_bindings"].items()
+                    for binding in bindings
+                },
+                "edges": {
+                    qedge_id: kgraph__["edges"][binding["id"]]
+                    for qedge_id, bindings in result["edge_bindings"].items()
+                    for binding in bindings
+                },
+            }
+
+            # now solve the smaller question
+            qgraph__ = copy.deepcopy(qgraph)
+            # remove edge
+            qgraph__["edges"].pop(qedge_id)
+            # pin node
+            for qnode_id, bindings in result["node_bindings"].items():
+                qgraph__["nodes"][qnode_id]["ids"] = [
+                    binding["id"]
+                    for binding in bindings
                 ]
-                kgraph_["nodes"].update(kgraph__["nodes"])
-                kgraph_["edges"].update(kgraph__["edges"])
+            # remove orphaned nodes
+            qgraph__.remove_orphaned()
+            kgraph_, results_ = await self.lookup(qgraph__)
 
-                # aggregate results
-                kgraph["nodes"].update(kgraph_["nodes"])
-                kgraph["edges"].update(kgraph_["edges"])
-                results.extend(results_)
+            # combine one-hop with subquery results
+            results_ = [
+                {
+                    "node_bindings": {
+                        **result_a["node_bindings"],
+                        **result_b["node_bindings"],
+                    },
+                    "edge_bindings": {
+                        **result_a["edge_bindings"],
+                        **result_b["edge_bindings"],
+                    },
+                }
+                for result_a, result_b in itertools.product(results_, results__)
+            ]
+            kgraph_["nodes"].update(kgraph___["nodes"])
+            kgraph_["edges"].update(kgraph___["edges"])
+
+            # aggregate results
+            kgraph["nodes"].update(kgraph_["nodes"])
+            kgraph["edges"].update(kgraph_["edges"])
+            results.extend(results_)
 
         for kedge in kgraph["edges"].values():
             kedge["attributes"] = [{
