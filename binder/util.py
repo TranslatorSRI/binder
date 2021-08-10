@@ -40,3 +40,74 @@ def to_list(scalar_or_list):
 
 class NoAnswersException(Exception):
     """No answers to question."""
+
+
+def build_conditions(**conditions):
+    """Build SQL WHERE clause.
+    
+    conditions uses a format similar to this:
+    https://docs.mongodb.com/manual/tutorial/query-documents/
+    """
+    conditions, values = zip(*[
+        build_condition(key, value)
+        for key, value in conditions.items()
+    ])
+    # flatten values tuples
+    values = tuple(
+        value
+        for tup in values
+        for value in tup
+    )
+    if len(conditions) == 1:
+        return conditions[0], values
+    return " AND ".join(
+        f"({condition})"
+        for condition in conditions
+    ), values
+
+
+def build_condition(key, value):
+    """Build SQL WHERE clause."""
+    if key == "$or":
+        conditions, values = zip(*[
+            build_conditions(**alternative)
+            for alternative in value
+        ])
+        # flatten values tuples
+        values = tuple(
+            value
+            for tup in values
+            for value in tup
+        )
+        return " OR ".join(
+            f"({condition})"
+            for condition in conditions
+        ), values
+    predicate, values = build_predicate(value)
+    return f"{key} " + predicate, values
+
+
+PREDICATES = {
+    "$in": "in",
+    "$lt": "<",
+    "$gt": ">",
+    "$le": "<=",
+    "$ge": ">=",
+    "$eq": "==",
+    "$ne": "!=",
+}
+
+
+def build_predicate(predicate):
+    """Build predicate."""
+    if not isinstance(predicate, dict):
+        return f"== ?", (predicate,)
+    if len(predicate) > 1:
+        raise ValueError(f"Cannot parse {predicate}")
+    key, value = next((key, value) for key, value in predicate.items())
+    if key == "$in":
+        return "in ({})".format(
+            ", ".join("?" for _ in range(len(value)))
+        ), tuple(value)
+    return f"{PREDICATES[key]} ?", (value,)
+        
