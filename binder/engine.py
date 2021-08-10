@@ -231,6 +231,8 @@ class KnowledgeProvider():
 
         # get kedges for qedge
         constraints = self.get_edge_constraints(qedge, qgraph_)
+        kedges = await self.get_kedges(**constraints)
+
         if any(
             is_symmetric(predicate)
             for predicate in qedge.get("predicates", [])
@@ -238,12 +240,19 @@ class KnowledgeProvider():
             symmetric_qedge = copy.deepcopy(qedge)
             symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
 
-            constraints = {"$or": [
-                constraints,
-                self.get_edge_constraints(symmetric_qedge, qgraph_),
-            ]}
+            symmetric_constraints = self.get_edge_constraints(symmetric_qedge, qgraph_)
 
-        kedges = await self.get_kedges(**constraints)
+            kedges = {
+                **kedges,
+                **{
+                    kedge_id: {
+                        "subject": kedge.pop("object"),
+                        "object": kedge.pop("subject"),
+                        **kedge,
+                    }
+                    for kedge_id, kedge in (await self.get_kedges(**symmetric_constraints)).items()
+                }
+            }
 
         for kedge_id, kedge in kedges.items():
             LOGGER.debug(
