@@ -1,4 +1,6 @@
 """Test generating SQL conditions."""
+import pytest
+
 from binder.util import build_conditions
 
 from .logging_setup import setup_logger
@@ -29,3 +31,11 @@ def test_condition():
     assert build_conditions(**{
         "a": {"$in": [1, 2]},
     }) == ("a in (?, ?)", (1, 2))
+
+
+def test_malformed_conditions():
+    """Test malformed conditions."""
+    with pytest.raises(ValueError):
+        build_conditions(**{
+            "a": {"$lt": 5, "$gt": 5},
+        })
