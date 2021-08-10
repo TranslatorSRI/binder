@@ -221,16 +221,15 @@ class KnowledgeProvider():
         except StopIteration:
             raise RuntimeError("Cannot find qnode with ids in %s", str(qgraph["nodes"]))
 
-        qgraph_ = copy.deepcopy(qgraph)
         qedge_id, qedge = next(
             (qedge_id, qedge)
             for qedge_id, qedge in list(qgraph["edges"].items())
             if source_qnode_id in (qedge["subject"], qedge["object"])
-            and qgraph_["edges"].pop(qedge_id) is not None
         )
+        qgraph["edges"].pop(qedge_id)
 
         # get kedges for qedge
-        constraints = self.get_edge_constraints(qedge, qgraph_)
+        constraints = self.get_edge_constraints(qedge, qgraph)
         symmetric_constraints = None
         if any(
             is_symmetric(predicate)
@@ -239,7 +238,7 @@ class KnowledgeProvider():
             symmetric_qedge = copy.deepcopy(qedge)
             symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
 
-            symmetric_constraints = self.get_edge_constraints(symmetric_qedge, qgraph_)
+            symmetric_constraints = self.get_edge_constraints(symmetric_qedge, qgraph)
 
         for flipped, constraints in ((False, constraints), (True, symmetric_constraints)):
             if constraints is None:
@@ -254,7 +253,7 @@ class KnowledgeProvider():
                 )
                 # now solve the smaller question
 
-                qgraph__ = copy.deepcopy(qgraph_)
+                qgraph__ = copy.deepcopy(qgraph)
                 # pin node
                 qgraph__["nodes"][qedge["subject"]]["ids"] = [kedge["subject"]]
                 qgraph__["nodes"][qedge["object"]]["ids"] = [kedge["object"]]
