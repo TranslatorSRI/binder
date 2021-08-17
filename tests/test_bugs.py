@@ -206,3 +206,33 @@ async def test_ignored_key(connection: aiosqlite.Connection):
     }
     kgraph, results = await kp.get_results(message["query_graph"])
     assert results
+
+
+@pytest.mark.asyncio
+async def test_self_edge(connection: aiosqlite.Connection):
+    """Test self-edge."""
+    await add_data_from_string(
+        connection,
+        data="""
+            MONDO:0005148(( category biolink:Disease ))
+            MONDO:0005148<-- predicate biolink:related_to --MONDO:0005148
+        """,
+    )
+    kp = KnowledgeProvider(connection)
+    message = {
+        "query_graph": {
+            "nodes": {
+                "n0": {
+                    "ids": ["MONDO:0005148"],
+                },
+            },
+            "edges": {
+                "e01": {
+                    "subject": "n0",
+                    "object": "n0",
+                },
+            },
+        }
+    }
+    kgraph, results = await kp.get_results(message["query_graph"])
+    assert len(results) == 1
