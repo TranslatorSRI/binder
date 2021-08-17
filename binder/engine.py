@@ -235,7 +235,7 @@ class KnowledgeProvider():
         if any(
             is_symmetric(predicate)
             for predicate in qedge.get("predicates", [])
-        ):
+        ) and qedge["subject"] != qedge["object"]:
             symmetric_qedge = copy.deepcopy(qedge)
             symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
 
