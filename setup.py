@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="binder",
-    version="4.2.4",
+    version="4.3.0",
     author="Patrick Wang",
     author_email="patrick@covar.com",
     url="https://github.com/TranslatorSRI/binder",
