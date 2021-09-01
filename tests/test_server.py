@@ -40,7 +40,7 @@ async def test_unsupported_operation():
             }
         },
         "workflow": [
-            "restate",
+            {"id": "restate"},
         ],
     }
     async with httpx.AsyncClient() as client:
@@ -79,7 +79,7 @@ async def test_lookup():
             }
         },
         "workflow": [
-            "lookup",
+            {"id": "lookup"},
         ],
     }
     async with httpx.AsyncClient() as client:
@@ -131,7 +131,7 @@ async def test_bind():
             },
         },
         "workflow": [
-            "bind",
+            {"id": "bind"},
         ],
     }
     async with httpx.AsyncClient() as client:

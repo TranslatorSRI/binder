@@ -37,15 +37,15 @@ def kp_router(
     ) -> Response:
         """Get results for query graph."""
         query = query.dict(exclude_unset=True)
-        workflow = query.get("workflow", ["lookup"])
+        workflow = query.get("workflow", [{"id": "lookup"}])
         if len(workflow) > 1:
             raise HTTPException(400, "Binder does not support workflows of length >1")
         operation = workflow[0]
         qgraph = query["message"]["query_graph"]
-        if operation == "lookup":
+        if operation["id"] == "lookup":
             async with KnowledgeProvider(database_file, **kwargs) as kp:
                 kgraph, results = await kp.get_results(qgraph)
-        elif operation == "bind":
+        elif operation["id"] == "bind":
             kgraph = query["message"]["knowledge_graph"]
             knodes = [
                 {
