@@ -2,6 +2,6 @@ aiosqlite==0.16.0
 bmt-lite-2.1.0==2.1.1
 fastapi==0.65.2
 pydantic==1.8.2
-reasoner-pydantic==1.1.2.1
+reasoner-pydantic==1.2.0.1
 starlette==0.14.2
-typing-extensions==3.10.0.0
+typing-extensions==3.10.0.2
