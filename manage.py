@@ -30,6 +30,7 @@ def lock(extra_args):
         """
         run_command(command)
 
+
 def main():
     command = sys.argv[1]
     command_func = globals()[command]

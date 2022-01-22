@@ -11,31 +11,58 @@ setup_logger()
 
 def test_condition():
     """Test condition generation."""
-    assert build_conditions(**{
-        "a": 5,
-    }) == ("a == ?", (5,))
-    assert build_conditions(**{
-        "a": 5,
-        "b": 4,
-    }) == ("(a == ?) AND (b == ?)", (5, 4))
-    assert build_conditions(**{
-        "$or": [
-            {"a": 5},
-            {"b": 4},
-        ],
-        "c": 3,
-    }) == ("((a == ?) OR (b == ?)) AND (c == ?)", (5, 4, 3))
-    assert build_conditions(**{
-        "a": {"$ge": 5},
-    }) == ("a >= ?", (5,))
-    assert build_conditions(**{
-        "a": {"$in": [1, 2]},
-    }) == ("a in (?, ?)", (1, 2))
+    assert (
+        build_conditions(
+            **{
+                "a": 5,
+            }
+        )
+        == ("a == ?", (5,))
+    )
+    assert (
+        build_conditions(
+            **{
+                "a": 5,
+                "b": 4,
+            }
+        )
+        == ("(a == ?) AND (b == ?)", (5, 4))
+    )
+    assert (
+        build_conditions(
+            **{
+                "$or": [
+                    {"a": 5},
+                    {"b": 4},
+                ],
+                "c": 3,
+            }
+        )
+        == ("((a == ?) OR (b == ?)) AND (c == ?)", (5, 4, 3))
+    )
+    assert (
+        build_conditions(
+            **{
+                "a": {"$ge": 5},
+            }
+        )
+        == ("a >= ?", (5,))
+    )
+    assert (
+        build_conditions(
+            **{
+                "a": {"$in": [1, 2]},
+            }
+        )
+        == ("a in (?, ?)", (1, 2))
+    )
 
 
 def test_malformed_conditions():
     """Test malformed conditions."""
     with pytest.raises(ValueError):
-        build_conditions(**{
-            "a": {"$lt": 5, "$gt": 5},
-        })
+        build_conditions(
+            **{
+                "a": {"$lt": 5, "$gt": 5},
+            }
+        )

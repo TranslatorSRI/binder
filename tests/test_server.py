@@ -9,11 +9,13 @@ from tests.logging_setup import setup_logger
 setup_logger()
 
 
-@kp_overlay("kp", data="""
+@kp_overlay(
+    "kp",
+    data="""
     MONDO:0005148(( category biolink:Disease ))
     MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
     CHEBI:6801(( category biolink:ChemicalSubstance ))
-    """
+    """,
 )
 @pytest.mark.asyncio
 async def test_unsupported_operation():
@@ -48,11 +50,13 @@ async def test_unsupported_operation():
     assert response.status_code == 400
 
 
-@kp_overlay("kp", data="""
+@kp_overlay(
+    "kp",
+    data="""
     MONDO:0005148(( category biolink:Disease ))
     MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
     CHEBI:6801(( category biolink:ChemicalSubstance ))
-    """
+    """,
 )
 @pytest.mark.asyncio
 async def test_lookup():
@@ -140,11 +144,13 @@ async def test_bind():
     assert response.json()["message"]["results"]
 
 
-@kp_overlay("kp", data="""
+@kp_overlay(
+    "kp",
+    data="""
     MONDO:0005148(( category biolink:Disease ))
     MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
     CHEBI:6801(( category biolink:ChemicalSubstance ))
-    """
+    """,
 )
 @pytest.mark.asyncio
 async def test_metakg():

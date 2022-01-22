@@ -11,7 +11,13 @@ from typing import Any, Dict, Optional, Tuple, Union
 import aiosqlite
 
 from .graph import Graph
-from .util import build_conditions, get_subpredicates, is_symmetric, NoAnswersException, get_subcategories
+from .util import (
+    build_conditions,
+    get_subpredicates,
+    is_symmetric,
+    NoAnswersException,
+    get_subcategories,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,20 +58,18 @@ KEY_MAP = {
 }
 
 
-class KnowledgeProvider():
+class KnowledgeProvider:
     """Knowledge provider."""
 
     def __init__(
-            self,
-            arg: Union[str, aiosqlite.Connection] = ":memory:",
-            name: Optional[str] = None,
+        self,
+        arg: Union[str, aiosqlite.Connection] = ":memory:",
+        name: Optional[str] = None,
     ):
         """Initialize."""
         if isinstance(arg, str):
             self.database_file = arg
-            self.name = os.path.splitext(
-                os.path.basename(self.database_file)
-            )[0]
+            self.name = os.path.splitext(os.path.basename(self.database_file))[0]
             self.db = None
         elif isinstance(arg, aiosqlite.Connection):
             self.database_file = None
@@ -73,9 +77,7 @@ class KnowledgeProvider():
             self.db = arg
             self.db.row_factory = custom_row_factory
         else:
-            raise ValueError(
-                "arg should be of type str or aiosqlite.Connection"
-            )
+            raise ValueError("arg should be of type str or aiosqlite.Connection")
         if name is not None:
             self.name = name
 
@@ -98,18 +100,15 @@ class KnowledgeProvider():
     async def get_operations(self):
         """Get operations."""
         async with self.db.execute(
-                "SELECT * FROM edges",
+            "SELECT * FROM edges",
         ) as cursor:
             edges = await cursor.fetchall()
 
         async with self.db.execute(
-                "SELECT * FROM nodes",
+            "SELECT * FROM nodes",
         ) as cursor:
             nodes = await cursor.fetchall()
-        nodes = {
-            node["id"]: node
-            for node in nodes
-        }
+        nodes = {node["id"]: node for node in nodes}
 
         ops = set()
         for edge in edges:
@@ -136,17 +135,14 @@ class KnowledgeProvider():
     async def get_curie_prefixes(self):
         """Get CURIE prefixes."""
         async with self.db.execute(
-                "SELECT * FROM nodes",
+            "SELECT * FROM nodes",
         ) as cursor:
             nodes = await cursor.fetchall()
 
         prefixes = defaultdict(set)
         for node in nodes:
             prefixes[node["category"]].add(node["id"].split(":")[0])
-        return {
-            category: list(prefix_set)
-            for category, prefix_set in prefixes.items()
-        }
+        return {category: list(prefix_set) for category, prefix_set in prefixes.items()}
 
     async def get_kedges(self, **kwargs):
         """Get kedges."""
@@ -154,17 +150,21 @@ class KnowledgeProvider():
         conditions, values = build_conditions(**kwargs)
         try:
             async with self.db.execute(
-                    (
-                        "SELECT edge.id AS id, subject.id AS subject, edge.predicate as predicate, object.id as object "
-                        "FROM edges AS edge "
-                        "JOIN nodes AS subject ON edge.subject = subject.id "
-                        "JOIN nodes AS object ON edge.object = object.id "
-                    ) + "WHERE " + conditions,
-                    values,
+                (
+                    "SELECT edge.id AS id, subject.id AS subject, edge.predicate as predicate, object.id as object "
+                    "FROM edges AS edge "
+                    "JOIN nodes AS subject ON edge.subject = subject.id "
+                    "JOIN nodes AS object ON edge.object = object.id "
+                )
+                + "WHERE "
+                + conditions,
+                values,
             ) as cursor:
                 rows = await cursor.fetchall()
         except sqlite3.OperationalError as err:
-            match = re.fullmatch(r"no such column: (?:edge|subject|object)\.(.*)", str(err))
+            match = re.fullmatch(
+                r"no such column: (?:edge|subject|object)\.(.*)", str(err)
+            )
             if match is not None:
                 LOGGER.warning("Unrecognized key '%s'", match.group(1))
                 return {}
@@ -176,7 +176,9 @@ class KnowledgeProvider():
         }
 
     def get_edge_constraints(
-        self, qedge, qgraph,
+        self,
+        qedge,
+        qgraph,
     ):
         """Get edge constraints."""
         kwargs = dict()
@@ -202,14 +204,16 @@ class KnowledgeProvider():
         return kwargs
 
     async def lookup(
-            self,
-            qgraph: Graph,
+        self,
+        qgraph: Graph,
     ):
         """Expand from query graph node."""
         LOGGER.debug(f"Lookup for qgraph: {qgraph}")
         # if this is a leaf node, we're done
         if not qgraph["edges"]:
-            return {"nodes": dict(), "edges": dict()}, [{"node_bindings": dict(), "edge_bindings": dict()}]
+            return {"nodes": dict(), "edges": dict()}, [
+                {"node_bindings": dict(), "edge_bindings": dict()}
+            ]
         kgraph = {"nodes": dict(), "edges": dict()}
         results = []
         try:
@@ -232,16 +236,22 @@ class KnowledgeProvider():
         # get kedges for qedge
         constraints = self.get_edge_constraints(qedge, qgraph_)
         symmetric_constraints = None
-        if any(
-            is_symmetric(predicate)
-            for predicate in qedge.get("predicates", [])
-        ) and qedge["subject"] != qedge["object"]:
+        if (
+            any(is_symmetric(predicate) for predicate in qedge.get("predicates", []))
+            and qedge["subject"] != qedge["object"]
+        ):
             symmetric_qedge = copy.deepcopy(qedge)
-            symmetric_qedge["subject"], symmetric_qedge["object"] = symmetric_qedge["object"], symmetric_qedge["subject"]
+            symmetric_qedge["subject"], symmetric_qedge["object"] = (
+                symmetric_qedge["object"],
+                symmetric_qedge["subject"],
+            )
 
             symmetric_constraints = self.get_edge_constraints(symmetric_qedge, qgraph_)
 
-        for flipped, constraints in ((False, constraints), (True, symmetric_constraints)):
+        for flipped, constraints in (
+            (False, constraints),
+            (True, symmetric_constraints),
+        ):
             if constraints is None:
                 continue
             kedges = await self.get_kedges(**constraints)
@@ -275,18 +285,24 @@ class KnowledgeProvider():
                         {
                             "node_bindings": {
                                 **result["node_bindings"],
-                                qedge["subject"]: [{
-                                    "id": kedge["object"],
-                                }],
-                                qedge["object"]: [{
-                                    "id": kedge["subject"],
-                                }],
+                                qedge["subject"]: [
+                                    {
+                                        "id": kedge["object"],
+                                    }
+                                ],
+                                qedge["object"]: [
+                                    {
+                                        "id": kedge["subject"],
+                                    }
+                                ],
                             },
                             "edge_bindings": {
                                 **result["edge_bindings"],
-                                qedge_id: [{
-                                    "id": kedge_id,
-                                }],
+                                qedge_id: [
+                                    {
+                                        "id": kedge_id,
+                                    }
+                                ],
                             },
                         }
                         for result in results_
@@ -296,18 +312,24 @@ class KnowledgeProvider():
                         {
                             "node_bindings": {
                                 **result["node_bindings"],
-                                qedge["subject"]: [{
-                                    "id": kedge["subject"],
-                                }],
-                                qedge["object"]: [{
-                                    "id": kedge["object"],
-                                }],
+                                qedge["subject"]: [
+                                    {
+                                        "id": kedge["subject"],
+                                    }
+                                ],
+                                qedge["object"]: [
+                                    {
+                                        "id": kedge["object"],
+                                    }
+                                ],
                             },
                             "edge_bindings": {
                                 **result["edge_bindings"],
-                                qedge_id: [{
-                                    "id": kedge_id,
-                                }],
+                                qedge_id: [
+                                    {
+                                        "id": kedge_id,
+                                    }
+                                ],
                             },
                         }
                         for result in results_
@@ -317,28 +339,26 @@ class KnowledgeProvider():
                 results.extend(results_)
 
         for kedge in kgraph["edges"].values():
-            kedge["attributes"] = [{
-                "attribute_type_id": "biolink:knowledge_source",
-                "value": f"infores:{self.name}",
-            }]
+            kedge["attributes"] = [
+                {
+                    "attribute_type_id": "biolink:knowledge_source",
+                    "value": f"infores:{self.name}",
+                }
+            ]
         return kgraph, results
 
     async def get_knode(self, knode_id: str) -> Tuple[str, Dict]:
         """Get knode by id."""
         async with self.db.execute(
-                "SELECT * FROM nodes WHERE id = ?",
-                [knode_id],
+            "SELECT * FROM nodes WHERE id = ?",
+            [knode_id],
         ) as cursor:
             row = await cursor.fetchone()
         if row is None:
             raise NoAnswersException()
         return row["id"], {
-            k: v
-            for k, v in dict(row).items()
-            if k not in ("id", "category")
-        } | {
-            "categories": [row["category"]]
-        }
+            k: v for k, v in dict(row).items() if k not in ("id", "category")
+        } | {"categories": [row["category"]]}
 
     async def get_results(self, qgraph: Dict[str, Any]):
         """Get results and kgraph."""

@@ -17,23 +17,25 @@ def get_kp(
     **kwargs,
 ):
     """Get KP dependable."""
+
     async def kp_dependable():
         """Get knowledge provider."""
         async with KnowledgeProvider(database_file, **kwargs) as kp:
             yield kp
+
     return kp_dependable
 
 
 def kp_router(
-        database_file: Union[str, aiosqlite.Connection] = ":memory:",
-        **kwargs,
+    database_file: Union[str, aiosqlite.Connection] = ":memory:",
+    **kwargs,
 ):
     """Add KP to server."""
     router = APIRouter()
 
     @router.post("/query", response_model=Response)
     async def answer_question(
-            query: Query,
+        query: Query,
     ) -> Response:
         """Get results for query graph."""
         query = query.dict(exclude_unset=True)
@@ -77,11 +79,11 @@ def kp_router(
                 "query_graph": qgraph,
             }
         }
-        return response
+        return Response.parse_obj(response)
 
     @router.get("/meta_knowledge_graph")
     async def get_metakg(
-            kp: KnowledgeProvider = Depends(get_kp(database_file)),
+        kp: KnowledgeProvider = Depends(get_kp(database_file)),
     ):
         """Get meta knowledge graph."""
         meta_kg = {

@@ -14,11 +14,13 @@ from tests.logging_setup import setup_logger
 setup_logger()
 
 
-@kp_overlay("kp", data="""
+@kp_overlay(
+    "kp",
+    data="""
     MONDO:0005148(( category biolink:Disease ))
     MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
     CHEBI:6801(( category biolink:ChemicalSubstance ))
-    """
+    """,
 )
 @pytest.mark.asyncio
 async def test_overlay():
@@ -70,7 +72,7 @@ async def test_database_file():
                 MONDO:0005148(( category biolink:Disease ))
                 MONDO:0005148<-- predicate biolink:treats --CHEBI:6801
                 CHEBI:6801(( category biolink:ChemicalSubstance ))
-            """
+            """,
         )
     async with KnowledgeProvider(filename) as kp:
         qgraph = {
