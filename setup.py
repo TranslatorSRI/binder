@@ -3,9 +3,9 @@ from setuptools import setup
 
 setup(
     name="binder",
-    version="4.3.0",
-    author="Patrick Wang",
-    author_email="patrick@covar.com",
+    version="4.3.1",
+    author="Kenneth Morton",
+    author_email="kenny@covar.com",
     url="https://github.com/TranslatorSRI/binder",
     description="Translator *graph binder",
     packages=["binder"],
@@ -14,7 +14,7 @@ setup(
         "aiosqlite>=0.16.0",
         "bmt-lite-2.1.0>=2.1.1,<3.0",
         "fastapi>=0.65.2",
-        "reasoner-pydantic>=1.2.0.1,<1.2.1",
+        "reasoner-pydantic>=2.1.0,<2.1.1",
     ],
     zip_safe=False,
     license="MIT",
