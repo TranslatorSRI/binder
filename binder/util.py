@@ -8,13 +8,12 @@ BMT = Toolkit()
 
 def get_subcategories(category):
     """Get sub-categories, according to the Biolink model."""
-    categories = BMT.get_descendants(category, formatted=True, reflexive=True) or [category]
+    categories = BMT.get_descendants(category, formatted=True, reflexive=True) or [
+        category
+    ]
     if "biolink:SmallMolecule" in categories:
         categories.append("biolink:ChemicalSubstance")
-    return [
-        category.replace("_", "")
-        for category in categories
-    ]
+    return [category.replace("_", "") for category in categories]
 
 
 def camelcase_to_snakecase(string):
@@ -24,11 +23,10 @@ def camelcase_to_snakecase(string):
 
 def get_subpredicates(predicate):
     """Get sub-predicates, according to the Biolink model."""
-    curies = BMT.get_descendants(predicate, formatted=True, reflexive=True) or [predicate]
-    return [
-        "biolink:" + camelcase_to_snakecase(curie[8:])
-        for curie in curies
+    curies = BMT.get_descendants(predicate, formatted=True, reflexive=True) or [
+        predicate
     ]
+    return ["biolink:" + camelcase_to_snakecase(curie[8:]) for curie in curies]
 
 
 def is_symmetric(predicate):
@@ -45,45 +43,29 @@ class NoAnswersException(Exception):
 
 def build_conditions(**conditions):
     """Build SQL WHERE clause.
-    
+
     conditions uses a format similar to this:
     https://docs.mongodb.com/manual/tutorial/query-documents/
     """
-    conditions, values = zip(*[
-        build_condition(key, value)
-        for key, value in conditions.items()
-    ])
-    # flatten values tuples
-    values = tuple(
-        value
-        for tup in values
-        for value in tup
+    conditions, values = zip(
+        *[build_condition(key, value) for key, value in conditions.items()]
     )
+    # flatten values tuples
+    values = tuple(value for tup in values for value in tup)
     if len(conditions) == 1:
         return conditions[0], values
-    return " AND ".join(
-        f"({condition})"
-        for condition in conditions
-    ), values
+    return " AND ".join(f"({condition})" for condition in conditions), values
 
 
 def build_condition(key, value):
     """Build SQL WHERE clause."""
     if key == "$or":
-        conditions, values = zip(*[
-            build_conditions(**alternative)
-            for alternative in value
-        ])
-        # flatten values tuples
-        values = tuple(
-            value
-            for tup in values
-            for value in tup
+        conditions, values = zip(
+            *[build_conditions(**alternative) for alternative in value]
         )
-        return " OR ".join(
-            f"({condition})"
-            for condition in conditions
-        ), values
+        # flatten values tuples
+        values = tuple(value for tup in values for value in tup)
+        return " OR ".join(f"({condition})" for condition in conditions), values
     predicate, values = build_predicate(value)
     return f"{key} " + predicate, values
 
@@ -107,8 +89,5 @@ def build_predicate(predicate):
         raise ValueError(f"Cannot parse {predicate}")
     key, value = next((key, value) for key, value in predicate.items())
     if key == "$in":
-        return "in ({})".format(
-            ", ".join("?" for _ in range(len(value)))
-        ), tuple(value)
+        return "in ({})".format(", ".join("?" for _ in range(len(value)))), tuple(value)
     return f"{PREDICATES[key]} ?", (value,)
-        
