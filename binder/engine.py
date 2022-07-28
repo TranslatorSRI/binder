@@ -183,7 +183,7 @@ class KnowledgeProvider:
         """Get edge constraints."""
         kwargs = dict()
         for key, value in qedge.items():
-            if key in ("subject", "object", "constraints"):
+            if key in ("subject", "object", "attribute_constraints"):
                 continue
             if isinstance(value, list) and len(value) == 1:
                 value = value[0]
@@ -193,7 +193,7 @@ class KnowledgeProvider:
                 kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
         for role in ("subject", "object"):
             for key, value in qgraph["nodes"][qedge[role]].items():
-                if key in ("constraints"):
+                if key in ("attribute_constraints"):
                     continue
                 if isinstance(value, list) and len(value) == 1:
                     value = value[0]
