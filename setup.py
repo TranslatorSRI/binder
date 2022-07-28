@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="binder",
-    version="4.3.2",
+    version="4.4.0",
     author="Kenneth Morton",
     author_email="kenny@covar.com",
     url="https://github.com/TranslatorSRI/binder",
@@ -14,7 +14,7 @@ setup(
         "aiosqlite>=0.16.0",
         "bmt-lite-2.1.0>=2.1.1,<3.0",
         "fastapi>=0.65.2",
-        "reasoner-pydantic>=2.1,<4.0",
+        "reasoner-pydantic>=3.0,<4.0",
     ],
     zip_safe=False,
     license="MIT",
