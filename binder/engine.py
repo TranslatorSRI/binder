@@ -193,7 +193,7 @@ class KnowledgeProvider:
                 kwargs[f"edge.{KEY_MAP.get(key, key)}"] = value
         for role in ("subject", "object"):
             for key, value in qgraph["nodes"][qedge[role]].items():
-                if key in ("attribute_constraints"):
+                if key in ("constraints"):
                     continue
                 if isinstance(value, list) and len(value) == 1:
                     value = value[0]
